@@ -23,6 +23,7 @@
   --rule-strong: #B0B0B0;
   --hover: rgba(0, 0, 0, .06);
   --glass: #FFFFFF;
+  --scrim: rgba(228, 228, 228, .94);
   --county-line: #B4B4B4;
   --state-line: #2E2E2E;
   --hl: #0A0A0A;         /* selected county */
@@ -43,7 +44,7 @@
   :root:not([data-theme="light"]) {
     --ground: #050505; --land: #1A1A1A; --panel: #0F0F0F; --raise: #161616;
     --ink: #F2F2F2; --ink-2: #C8C8C8; --ink-3: #A0A0A0;
-    --rule: #262626; --rule-strong: #3A3A3A; --hover: rgba(255, 255, 255, .08); --glass: rgba(15, 15, 15, .88);
+    --rule: #262626; --rule-strong: #3A3A3A; --hover: rgba(255, 255, 255, .08); --glass: rgba(15, 15, 15, .88); --scrim: rgba(5, 5, 5, .94);
     --county-line: #3E3E3E; --state-line: #A8A8A8;
     --hl: #F2F2F2; --hl-soft: rgba(255, 255, 255, .20); --hl-edge: #FFFFFF; --hl-ink: #000000;
     --danger: #F2F2F2; --danger-soft: rgba(255, 255, 255, .10); --focus: #FFFFFF;
@@ -54,7 +55,7 @@
 :root[data-theme="dark"] {
   --ground: #050505; --land: #1A1A1A; --panel: #0F0F0F; --raise: #161616;
   --ink: #F2F2F2; --ink-2: #C8C8C8; --ink-3: #A0A0A0;
-  --rule: #262626; --rule-strong: #3A3A3A; --hover: rgba(255, 255, 255, .08); --glass: rgba(15, 15, 15, .88);
+  --rule: #262626; --rule-strong: #3A3A3A; --hover: rgba(255, 255, 255, .08); --glass: rgba(15, 15, 15, .88); --scrim: rgba(5, 5, 5, .94);
   --county-line: #3E3E3E; --state-line: #A8A8A8;
   --hl: #F2F2F2; --hl-soft: rgba(255, 255, 255, .20); --hl-edge: #FFFFFF; --hl-ink: #000000;
   --danger: #F2F2F2; --danger-soft: rgba(255, 255, 255, .10); --focus: #FFFFFF;
@@ -159,8 +160,8 @@ kbd {
 .hint b { color: var(--ink); font-weight: 600; }
 
 .sw { display: inline-block; flex: none; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--hl-edge); }
-.sw-county { background: var(--hl); }
-.sw-state { background: repeating-linear-gradient(45deg, var(--hl-edge) 0 1.4px, var(--hl-soft) 1.4px 4px); background-color: var(--land); }
+.sw-county { background: var(--lc, var(--hl)); border-color: var(--lc, var(--hl-edge)); }
+.sw-state { background: repeating-linear-gradient(45deg, var(--lc, var(--hl-edge)) 0 1.4px, var(--hl-soft) 1.4px 4px); background-color: var(--land); border-color: var(--lc, var(--hl-edge)); }
 
 .zoom-ctl {
   position: absolute;
@@ -247,6 +248,7 @@ kbd {
   min-height: 0;
   background: var(--panel);
   border-left: 1px solid var(--rule);
+  overflow-y: auto;
 }
 .pad {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -330,7 +332,7 @@ kbd {
 .btn.quiet { margin-left: auto; border-color: transparent; background: transparent; color: var(--danger); }
 .btn.quiet:hover { background: var(--danger-soft); }
 
-.list { flex: 1; min-height: 0; overflow: auto; padding-block: 4px 24px; }
+.list { flex: none; padding-block: 4px 24px; }
 .note {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
   margin-top: 10px; padding: 9px 11px;
@@ -403,6 +405,86 @@ kbd {
   background: var(--raise); color: var(--ink); font: 400 12px/1.5 var(--mono);
 }
 
+.btn.solid { background: var(--ink); color: var(--raise); border-color: var(--ink); }
+.btn.solid:hover { background: var(--ink-2); }
+.btn.danger { margin-left: auto; border-color: transparent; background: transparent; color: var(--ink-2); }
+.btn.danger:hover { background: var(--danger-soft); color: var(--ink); }
+.btn[disabled].solid { background: var(--ink-3); border-color: var(--ink-3); }
+
+.sw-origin { position: relative; border-radius: 50%; background: var(--lc, var(--hl)); border-color: var(--lc, var(--hl-edge)); }
+.sw-origin::after { content: "★"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 8px; line-height: 1; color: var(--raise); }
+.seg button[aria-checked="true"] .sw-origin { background: var(--raise); }
+.seg button[aria-checked="true"] .sw-origin::after { color: var(--ink); }
+.sw-pin { display: grid; place-items: center; width: 12px; height: 12px; color: var(--lc, var(--hl)); }
+.sw-pin svg { width: 15px; height: 15px; flex: none; }
+.otag { margin-left: 6px; padding: 2px 5px; border: 1px solid var(--rule-strong); border-radius: 4px; font: 700 10px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); vertical-align: 2px; }
+.row.origin .row-name { font-weight: 600; }
+.by { display: inline-block; flex: none; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }
+.fips { white-space: nowrap; }
+
+.layers { display: grid; gap: 8px; padding-block: 0 12px; }
+.lay-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lay { all: unset; box-sizing: border-box; flex: none; display: inline-flex; align-items: center; gap: 7px; max-width: 190px; height: 34px; padding: 0 10px; border: 1px solid var(--rule-strong); border-radius: 9px; background: var(--raise); color: var(--ink-2); font: 600 13.5px/1 var(--body); cursor: pointer; transition: background .12s, transform .08s; }
+.lay:hover { background: var(--hover); }
+.lay:active { transform: scale(.97); }
+.lay:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.lay i { flex: none; width: 12px; height: 12px; border-radius: 3px; background: var(--c); box-shadow: 0 0 0 1px var(--rule-strong); }
+.lay span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lay em { flex: none; font: 500 11.5px/1 var(--mono); font-style: normal; color: var(--ink-3); }
+.lay.on { border-color: var(--c); box-shadow: 0 0 0 1px var(--c) inset; color: var(--ink); }
+.lay.add { border-style: dashed; }
+.lay-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lay-edit input { flex: 1 1 150px; min-width: 0; height: 34px; padding: 0 10px; border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--raise); color: var(--ink); font: 600 14px var(--body); }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swt { all: unset; box-sizing: border-box; width: 20px; height: 20px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1px var(--rule-strong); cursor: pointer; }
+.swt.on { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--ink); }
+.swt:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+.bb { display: grid; gap: 8px; padding-block: 0 12px; }
+.bb-title { font: 700 11px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.bb-row { display: flex; align-items: center; gap: 8px; }
+.bb-slash { font: 600 16px var(--mono); color: var(--ink-3); }
+.bb-row input[type="text"], .bb-me input { flex: 1; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--raise); color: var(--ink); font: 500 14px var(--mono); }
+.bb-me input { font: 600 14px var(--body); }
+.bb-lock { display: inline-flex; align-items: center; gap: 6px; font: 600 13px var(--body); color: var(--ink-2); white-space: nowrap; cursor: pointer; }
+.recent { display: flex; flex-wrap: wrap; gap: 6px; }
+.recent a { padding: 4px 9px; border: 1px solid var(--rule-strong); border-radius: 999px; font: 500 12.5px var(--mono); color: var(--ink-2); text-decoration: none; }
+.recent a:hover { background: var(--hover); color: var(--ink); }
+.bb-top { display: flex; align-items: center; gap: 8px; }
+.bb-slug { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 7px; font: 600 15px var(--mono); overflow-wrap: anywhere; }
+.bb-me { display: flex; align-items: center; gap: 8px; }
+.av { all: unset; box-sizing: border-box; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--c); color: #fff; font: 700 11px/28px var(--body); text-align: center; cursor: pointer; box-shadow: 0 0 0 2px var(--panel); transition: transform .1s; }
+.av:hover { transform: translateY(-1px); }
+.av.self { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--ink); }
+.av:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.live { display: grid; gap: 8px; padding-block: 0 12px; }
+.live-head { display: flex; align-items: center; gap: 8px; font: 600 13px var(--body); }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); animation: pulse 1.6s ease-out infinite; }
+.pulse.off { opacity: .35; animation: none; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--hl-soft); } 100% { box-shadow: 0 0 0 8px transparent; } }
+.avs { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 2px; }
+.feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; font-size: 13px; }
+.feed li { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
+.feed li .by { margin: 0; }
+.feed time { font: 400 11.5px var(--mono); color: var(--ink-3); }
+
+.gate { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; background: var(--scrim); }
+.gate-card { display: grid; gap: 12px; width: min(440px, 100%); padding: 26px; border: 1px solid var(--rule-strong); border-radius: 14px; background: var(--raise); box-shadow: var(--shadow); }
+.g-kicker { margin: 0; font: 700 11px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.gate-card h2 { margin: 0; font: 700 32px/1 var(--display); letter-spacing: .03em; overflow-wrap: anywhere; }
+.g-note { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.g-form { display: grid; gap: 10px; }
+.g-form > label { font: 600 13px var(--body); }
+.g-form input[type="password"] { height: 40px; padding: 0 12px; border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--panel); color: var(--ink); font: 500 15px var(--body); }
+.g-check { display: flex; align-items: center; gap: 8px; font: 500 14px var(--body); cursor: pointer; }
+.g-err { margin: 0; min-height: 1.3em; font: 600 13px var(--body); color: var(--ink); }
+.g-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.imp-row input[type="file"] { max-width: 100%; font: 400 13px var(--body); color: var(--ink-2); }
+.imp-sum { margin: 0; font: 600 13px var(--body); }
+.imp-bad { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--ink-2); }
+.imp-bad code { font: 500 12px var(--mono); color: var(--ink); }
+.imp-actions { display: flex; gap: 8px; }
+.copy-sheet p b { color: var(--ink); }
 .total b.bump { animation: bump .32s cubic-bezier(.3, 1.6, .5, 1); }
 @keyframes bump { 0% { transform: scale(1.35); } 100% { transform: scale(1); } }
 .row.new, .grp.new { animation: flash 1.1s ease-out; }
@@ -437,6 +519,7 @@ kbd {
         <span class="seg-label">Select</span>
         <button type="button" role="radio" aria-checked="false" data-mode="state" id="modeState"><span class="sw sw-state" aria-hidden="true"></span>States <kbd>S</kbd></button>
         <button type="button" role="radio" aria-checked="true" data-mode="county" id="modeCounty"><span class="sw sw-county" aria-hidden="true"></span>Counties <kbd>C</kbd></button>
+        <button type="button" role="radio" aria-checked="false" data-mode="origin" id="modeOrigin" title="Mark where the vendor lives. Middle-click does this in any mode."><span class="sw sw-origin" aria-hidden="true"></span>Origin <kbd>O</kbd></button>
       </div>
       <p class="hint" id="hint"></p>
     </div>
@@ -469,6 +552,15 @@ kbd {
       </div>
     </header>
 
+    <div class="pad" id="boardBox"></div>
+
+    <section class="layers pad" id="layers" aria-label="Coverage layers">
+      <div class="lay-chips" id="layChips" role="tablist"></div>
+      <div class="lay-edit" id="layEdit"></div>
+    </section>
+
+    <section class="live pad" id="live" hidden aria-label="People on this board"></section>
+
     <div class="search pad">
       <div class="search-field">
         <label for="q" class="sr-only">Find a state or county</label>
@@ -482,7 +574,8 @@ kbd {
     <div class="actions pad">
       <button type="button" class="btn" id="copyList"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5"/><path d="M10.5 5V3.5A1.5 1.5 0 0 0 9 2H3.5A1.5 1.5 0 0 0 2 3.5V9a1.5 1.5 0 0 0 1.5 1.5H5"/></svg>Copy list</button>
       <button type="button" class="btn" id="copyCsv">Copy CSV</button>
-      <button type="button" class="btn quiet" id="clearAll">Clear all</button>
+      <button type="button" class="btn" id="importBtn">Import</button>
+      <button type="button" class="btn quiet" id="clearAll">Clear layer</button>
     </div>
 
     <div class="copy-sheet pad" id="copySheet" hidden>
@@ -492,9 +585,21 @@ kbd {
       <div><button type="button" class="btn" id="copyDone">Done</button></div>
     </div>
 
+    <div class="copy-sheet pad" id="importSheet" hidden>
+      <p><b>Import into the active layer.</b> Paste county names with states, FIPS codes, or a CSV from Copy CSV. One per line. Start a line with “Origin:” to mark an origin.</p>
+      <label for="importText" class="sr-only">Paste places to import</label>
+      <textarea id="importText" placeholder="Cook County, IL&#10;06075&#10;Colorado (whole state)&#10;Origin: San Francisco County, CA" spellcheck="false"></textarea>
+      <div class="imp-row"><input id="importFile" type="file" accept=".csv,.txt,text/csv,text/plain"><label for="importFile" class="sr-only">Choose a file</label></div>
+      <p id="importSummary" class="imp-sum" aria-live="polite"></p>
+      <ul id="importBad" class="imp-bad"></ul>
+      <div class="imp-actions"><button type="button" class="btn solid" id="importGo" disabled>Add to layer</button><button type="button" class="btn" id="importCancel">Cancel</button></div>
+    </div>
+
     <div class="list pad" id="list"></div>
   </aside>
 </div>
+
+<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-label="Board"><div class="gate-card" id="gateCard"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
@@ -544,7 +649,7 @@ kbd {
     return "County";
   }
 
-    const LS_KEY = "state-county-picker:v2";
+    const LS_KEY = "state-county-picker:v3";
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const coarse = matchMedia("(pointer: coarse)").matches;
   const MI_PER_UNIT = (6371.0088 / 1300) * 0.621371; // us-atlas Albers USA scale 1300
@@ -584,48 +689,90 @@ kbd {
   const byName = (a, b) => a.name.localeCompare(b.name) || a.full.localeCompare(b.full);
   for (const s of S.values()) s.counties.sort(byName);
 
-  /* ---------- selection state ---------- */
-  const sel = { states: new Set(), counties: new Set() };
+  /* ---------- layers: each layer is one coverage area with its own color ---------- */
+  const LAYER_COLORS = ["#111111", "#e03131", "#1971c2", "#2f9e44", "#f08c00", "#9c36b5", "#0c8599", "#e64980", "#6741d9", "#5c940d", "#c2410c", "#495057"];
+  const mkLayer = (id, name, color) => ({ id, name, color, s: new Set(), c: new Set(), o: new Set() });
+  let layers = [mkLayer(0, "Layer 1", LAYER_COLORS[0])];
+  let activeId = 0;
+  const curLayer = () => layers.find((l) => l.id === activeId) || layers[0];
+  // sel always points at the active layer, so editing code does not care about layers
+  const sel = {
+    get states() { return curLayer().s; }, set states(v) { curLayer().s = v; },
+    get counties() { return curLayer().c; }, set counties(v) { curLayer().c = v; },
+    get origins() { return curLayer().o; }, set origins(v) { curLayer().o = v; },
+  };
   let mode = "county";
   let isExample = false;
   let justAdded = null;
 
-  (function load() {
+  function loadLocal() {
     try {
-      const raw = localStorage.getItem(LS_KEY);
+      let raw = localStorage.getItem(LS_KEY);
       if (raw) {
-        const o = JSON.parse(raw);
-        (o.states || []).forEach((id) => S.has(id) && sel.states.add(id));
-        (o.counties || []).forEach((id) => C.has(id) && sel.counties.add(id));
-        if (o.mode === "county") mode = "county";
-        isExample = !!o.example;
+        const o = JSON.parse(raw), seen = new Set();
+        const ls = (o.layers || []).slice(0, 12).map((x, i) => {
+          const id = Number.isInteger(x.id) && x.id >= 0 && x.id < 12 && !seen.has(x.id) ? x.id : [...Array(12).keys()].find((n) => !seen.has(n));
+          seen.add(id);
+          const L = mkLayer(id, String(x.name || "Layer " + (i + 1)).slice(0, 32), /^#[0-9a-f]{6}$/i.test(x.color) ? x.color : LAYER_COLORS[i % LAYER_COLORS.length]);
+          (x.s || []).forEach((k) => S.has(k) && L.s.add(k));
+          (x.c || []).forEach((k) => C.has(k) && L.c.add(k));
+          (x.o || []).forEach((k) => L.c.has(k) && L.o.add(k));
+          return L;
+        });
+        if (ls.length) { layers = ls; activeId = ls.some((l) => l.id === o.active) ? o.active : ls[0].id; }
         return;
       }
-    } catch (e) { /* storage unavailable: fall through to the example */ }
-  })();
+      raw = localStorage.getItem("state-county-picker:v2");   // older single-selection format
+      if (raw) {
+        const o = JSON.parse(raw);
+        (o.states || []).forEach((k) => S.has(k) && layers[0].s.add(k));
+        (o.counties || []).forEach((k) => C.has(k) && layers[0].c.add(k));
+      }
+    } catch (e) { /* storage unavailable: start empty */ }
+  }
+  loadLocal();
 
   function save() {
+    if (board) return;   // a shared board lives on the server
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ states: [...sel.states], counties: [...sel.counties], mode, example: isExample }));
+      localStorage.setItem(LS_KEY, JSON.stringify({ layers: layers.map((l) => ({ id: l.id, name: l.name, color: l.color, s: [...l.s], c: [...l.c], o: [...l.o] })), active: activeId }));
     } catch (e) { /* not saved; the page still works */ }
   }
-  const snapshot = () => ({ s: [...sel.states], c: [...sel.counties], ex: isExample });
+  const snapshot = () => ({ layers: layers.map((l) => ({ id: l.id, name: l.name, color: l.color, s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) })), active: activeId });
   function restore(snap) {
-    sel.states = new Set(snap.s); sel.counties = new Set(snap.c); isExample = snap.ex;
+    if (board) {   // keep the board's layers, put back each layer's contents
+      for (const l of layers) { const o = snap.layers.find((x) => x.id === l.id); if (o) { l.s = new Set(o.s); l.c = new Set(o.c); l.o = new Set(o.o); } }
+    } else {
+      layers = snap.layers.map((l) => ({ ...l, s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) }));
+      activeId = layers.some((l) => l.id === snap.active) ? snap.active : layers[0].id;
+      renderEdit();
+    }
     paint();
+    syncOut();
   }
-  function commit() { isExample = false; paint(); }
+  function pruneOrigins() { for (const l of layers) for (const id of l.o) if (!l.c.has(id)) l.o.delete(id); }
+  function commit() { pruneOrigins(); isExample = false; paint(); syncOut(); }
   function toggle(kind, id) {
     const set = kind === "s" ? sel.states : sel.counties;
     set.has(id) ? set.delete(id) : set.add(id);
-    if (set.has(id)) { justAdded = kind + id; popAt(kind, id); }
+    if (set.has(id)) { justAdded = kind + id; popAt(kind, id, lcol(curLayer())); }
     commit();
     return set.has(id);
+  }
+  function toggleOrigin(id) {
+    const L = curLayer(), on = !L.o.has(id);
+    if (on) { L.o.add(id); L.c.add(id); justAdded = "c" + id; popAt("c", id, lcol(L)); } else L.o.delete(id);
+    commit();
+    return on;
   }
 
   /* ---------- map (canvas: crisp lines and text, draws only what is on screen) ---------- */
   const canvas = $("#map");
-  const ctx = canvas.getContext("2d", { alpha: false });
+  const mainCtx = canvas.getContext("2d", { alpha: false });
+  const baseCanvas = document.createElement("canvas");   // the map itself, redrawn only when the view or selection changes
+  const baseCtx = baseCanvas.getContext("2d", { alpha: false });
+  let ctx = mainCtx;
+  let baseDirty = true;
   const hitCtx = document.createElement("canvas").getContext("2d");
   const view = d3.select(canvas);
   const pal = {};
@@ -649,12 +796,31 @@ kbd {
   }
   for (const c of C.values()) c.area = (c.b[1][0] - c.b[0][0]) * (c.b[1][1] - c.b[0][1]);
 
+  /* which layers cover what, rebuilt whenever the selection changes */
+  let cover = new Map(), originList = [], stateCover = [];
+  function rebuildCover() {
+    cover = new Map(); originList = []; stateCover = [];
+    layers.forEach((L, li) => {
+      for (const id of L.c) { const a = cover.get(id); if (a) a.push(li); else cover.set(id, [li]); }
+      for (const id of L.o) originList.push({ id, li });
+      for (const id of L.s) stateCover.push({ id, li });
+    });
+  }
+  const lcol = (L) => (L.color === "#111111" ? pal.hl : L.color);
+  const textOn = (hex) => {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+    if (!m) return "#000000";
+    const n = parseInt(m[1], 16);
+    return 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 150 ? "#111111" : "#ffffff";
+  };
+
   let vw = 0, vh = 0, dpr = 1, base = d3.zoomIdentity, cur = d3.zoomIdentity;
   let atHome = true, panning = false, ready = false, raf = 0, hover = null;
   let pops = [];
   const toolbarEl = $("#toolbar");
   const PAD = () => ({ t: toolbarEl.offsetHeight + 26, r: 18, b: 18, l: 18 });
-  const requestDraw = () => { if (!raf) raf = requestAnimationFrame(draw); };
+  // requestDraw(true) repaints only the moving overlay (hover, flashes, other people's cursors)
+  const requestDraw = (overlayOnly) => { if (!overlayOnly) baseDirty = true; if (!raf) raf = requestAnimationFrame(draw); };
 
   /* zoom: wheel is handled below for an eased, zippy feel; drag gets momentum */
   const zoom = d3.zoom()
@@ -743,8 +909,8 @@ kbd {
     const goHome = atHome || !ready;
     vw = r.width; vh = r.height;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(vw * dpr);
-    canvas.height = Math.round(vh * dpr);
+    canvas.width = baseCanvas.width = Math.round(vw * dpr);
+    canvas.height = baseCanvas.height = Math.round(vh * dpr);
     canvas.style.width = vw + "px";
     canvas.style.height = vh + "px";
     base = fitTransform();
@@ -796,9 +962,26 @@ kbd {
     if (!vw) return;
     const k = cur.k, rel = k / base.k, now = performance.now();
     const [vx0, vy0] = cur.invert([0, 0]), [vx1, vy1] = cur.invert([vw, vh]);
+    const lw = (px) => px / k;
+    if (baseDirty) {
+      baseDirty = false;
+      ctx = baseCtx;
+      renderBase(k, rel, vx0, vy0, vx1, vy1);
+      ctx = mainCtx;
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(baseCanvas, 0, 0);
+    ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * cur.x, dpr * cur.y);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    drawOverlay(k, now, lw);
+    const moving = drawPeers();
+    if (pops.length || moving) requestDraw(true);
+  }
+
+  function renderBase(k, rel, vx0, vy0, vx1, vy1) {
     const vis = (b) => b[1][0] >= vx0 && b[0][0] <= vx1 && b[1][1] >= vy0 && b[0][1] <= vy1;
     const lw = (px) => px / k;
-
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = pal.ground;
     ctx.fillRect(0, 0, vw, vh);
@@ -811,9 +994,34 @@ kbd {
     const visStates = [];
     for (const s of S.values()) if (vis(s.b)) { visStates.push(s); ctx.fill(s.p); }
 
-    // selected counties
-    ctx.fillStyle = pal.hl;
-    for (const id of sel.counties) { const c = C.get(id); if (vis(c.b)) ctx.fill(cp(c)); }
+    // covered counties: one color, or stripes where layers overlap
+    for (const [id, idxs] of cover) {
+      if (idxs.length !== 1) continue;
+      const c = C.get(id);
+      if (!vis(c.b)) continue;
+      ctx.fillStyle = lcol(layers[idxs[0]]);
+      ctx.fill(cp(c));
+    }
+    for (const [id, idxs] of cover) {
+      if (idxs.length < 2) continue;
+      const c = C.get(id);
+      if (!vis(c.b)) continue;
+      ctx.save();
+      ctx.clip(cp(c));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const x0 = Math.max(0, c.b[0][0] * k + cur.x), x1 = Math.min(vw, c.b[1][0] * k + cur.x);
+      const y0 = Math.max(0, c.b[0][1] * k + cur.y), y1 = Math.min(vh, c.b[1][1] * k + cur.y);
+      const hgt = y1 - y0, step = 8, n = idxs.length;
+      ctx.lineWidth = step / 1.4142;
+      ctx.lineCap = "butt";
+      for (let j = 0; j < n; j++) {
+        ctx.strokeStyle = lcol(layers[idxs[j]]);
+        ctx.beginPath();
+        for (let d = x0 - hgt + j * step; d < x1; d += step * n) { ctx.moveTo(d, y1); ctx.lineTo(d + hgt, y0); }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     // county borders
     ctx.strokeStyle = pal["county-line"];
@@ -822,30 +1030,33 @@ kbd {
     for (const s of visStates) ctx.stroke(countyEdges(s));
     ctx.globalAlpha = 1;
 
-    // selected county outline
-    if (sel.counties.size) {
-      ctx.strokeStyle = pal["hl-edge"];
-      ctx.lineWidth = lw(1);
-      for (const id of sel.counties) { const c = C.get(id); if (vis(c.b)) ctx.stroke(cp(c)); }
+    // covered county outline
+    if (cover.size) {
+      ctx.strokeStyle = pal.ink;
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = lw(0.9);
+      for (const [id] of cover) { const c = C.get(id); if (vis(c.b)) ctx.stroke(cp(c)); }
+      ctx.globalAlpha = 1;
     }
 
-    // whole-state selection: tint, diagonal hatch and edge
-    for (const id of sel.states) {
-      const s = S.get(id);
+    // whole-state coverage: tint, diagonal hatch and edge, in each layer's color
+    for (const { id, li } of stateCover) {
+      const s = S.get(id), col = lcol(layers[li]);
       if (!vis(s.b)) continue;
       ctx.save();
       ctx.clip(s.p);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const x0 = Math.max(0, s.b[0][0] * k + cur.x), x1 = Math.min(vw, s.b[1][0] * k + cur.x);
       const y0 = Math.max(0, s.b[0][1] * k + cur.y), y1 = Math.min(vh, s.b[1][1] * k + cur.y);
-      ctx.fillStyle = pal["hl-soft"];
+      ctx.fillStyle = col;
+      ctx.globalAlpha = 0.2;
       ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
-      ctx.strokeStyle = pal["hl-edge"];
-      ctx.globalAlpha = 0.7;
+      ctx.strokeStyle = col;
+      ctx.globalAlpha = 0.75;
       ctx.lineWidth = 1.3;
       ctx.beginPath();
-      const h = y1 - y0;
-      for (let d = x0 - h; d < x1; d += 7) { ctx.moveTo(d, y1); ctx.lineTo(d + h, y0); }
+      const h2 = y1 - y0;
+      for (let d = x0 - h2; d < x1; d += 7) { ctx.moveTo(d, y1); ctx.lineTo(d + h2, y0); }
       ctx.stroke();
       ctx.restore();
     }
@@ -854,14 +1065,31 @@ kbd {
     ctx.strokeStyle = pal["state-line"];
     ctx.lineWidth = lw(1.25);
     ctx.stroke(stateEdges);
-    for (const id of sel.states) {
+    for (const { id, li } of stateCover) {
       const s = S.get(id);
       if (!vis(s.b)) continue;
-      ctx.strokeStyle = pal["hl-edge"];
-      ctx.lineWidth = lw(2.2);
+      ctx.strokeStyle = lcol(layers[li]);
+      ctx.lineWidth = lw(2.4);
       ctx.stroke(s.p);
     }
 
+    // origins: a double outline in the layer's color
+    for (const { id, li } of originList) {
+      const c = C.get(id);
+      if (!vis(c.b)) continue;
+      ctx.strokeStyle = pal.land;
+      ctx.lineWidth = lw(5);
+      ctx.stroke(cp(c));
+      ctx.strokeStyle = lcol(layers[li]);
+      ctx.lineWidth = lw(2.6);
+      ctx.stroke(cp(c));
+    }
+
+    drawLabels(visStates, rel, vx0, vy0, vx1, vy1);
+    drawOriginMarks(vx0, vy0, vx1, vy1);
+  }
+
+  function drawOverlay(k, now, lw) {
     // hover
     if (hover) {
       const shape = hover.kind === "s" ? S.get(hover.id).p : cp(C.get(hover.id));
@@ -879,14 +1107,11 @@ kbd {
     for (const p of pops) {
       const a = (now - p.t) / 420;
       ctx.globalAlpha = (1 - a) * 0.9;
-      ctx.strokeStyle = pal.ink;
+      ctx.strokeStyle = p.color || pal.ink;
       ctx.lineWidth = lw(2 + 14 * a);
       ctx.stroke(p.shape);
     }
     ctx.globalAlpha = 1;
-
-    drawLabels(visStates, rel, vx0, vy0, vx1, vy1);
-    if (pops.length) requestDraw();
   }
 
   function drawLabels(visStates, rel, vx0, vy0, vx1, vy1) {
@@ -954,12 +1179,33 @@ kbd {
         const bw = (c.b[1][0] - c.b[0][0]) * k;
         const w = textW(c.name, CF);
         if (bw < w + 8 || !free(x, y, w + 6, 16)) continue;
-        const on = sel.counties.has(c.id);
-        put(c.name, x, y, CF, on ? pal["hl-ink"] : pal.ink, on ? pal.hl : pal.land, 3.5);
+        const idxs = cover.get(c.id);
+        if (idxs && idxs.length === 1) { const col = lcol(layers[idxs[0]]); put(c.name, x, y, CF, textOn(col), col, 3.5); }
+        else put(c.name, x, y, CF, pal.ink, pal.land, 3.5);
         if (++n >= 450) break;
       }
     }
     setSpacing(0);
+  }
+
+  function drawOriginMarks(vx0, vy0, vx1, vy1) {
+    if (!originList.length) return;
+    const rel = cur.k / base.k, r = Math.max(6, Math.min(11, 5 + rel * 0.7));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (const { id, li } of originList) {
+      const c = C.get(id);
+      if (c.lp[0] < vx0 || c.lp[0] > vx1 || c.lp[1] < vy0 || c.lp[1] > vy1) continue;
+      const x = c.lp[0] * cur.k + cur.x, col = lcol(layers[li]);
+      const y = c.lp[1] * cur.k + cur.y - (rel > 1.4 ? r + 9 : 0);   // sit above the county name once names show
+      ctx.beginPath(); ctx.arc(x, y, r + 1.5, 0, 6.2832);
+      ctx.fillStyle = "#ffffff"; ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832);
+      ctx.fillStyle = col; ctx.fill();
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) { const a = -1.5708 + i * 0.6283, rr = i % 2 ? r * 0.42 : r * 0.78; ctx[i ? "lineTo" : "moveTo"](x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+      ctx.closePath();
+      ctx.fillStyle = textOn(col); ctx.fill();
+    }
   }
 
   const themeMq = matchMedia("(prefers-color-scheme: dark)");
@@ -970,10 +1216,10 @@ kbd {
     Promise.all([document.fonts.load(`700 12px "Public Sans"`), document.fonts.load(`600 12px "Public Sans"`)]).then(() => { widthCache.clear(); requestDraw(); }).catch(() => {});
   }
 
-  function popAt(kind, id) {
+  function popAt(kind, id, color) {
     if (reduceMotion) return;
-    pops.push({ t: performance.now(), shape: kind === "s" ? S.get(id).p : cp(C.get(id)) });
-    requestDraw();
+    pops.push({ t: performance.now(), color, shape: kind === "s" ? S.get(id).p : cp(C.get(id)) });
+    requestDraw(true);
   }
 
   /* ---------- hover, tooltip and picking ---------- */
@@ -982,15 +1228,15 @@ kbd {
   function showHover(kind, id) {
     if (hover && hover.kind === kind && hover.id === id) return;
     hover = { kind, id };
-    requestDraw();
+    requestDraw(true);
   }
-  function clearHover() { if (hover) { hover = null; requestDraw(); } }
-  function pickAt(e) {
+  function clearHover() { if (hover) { hover = null; requestDraw(true); } }
+  function pickAt(e, wantCounty) {
     const r = canvas.getBoundingClientRect();
     const [x, y] = cur.invert([e.clientX - r.left, e.clientY - r.top]);
     for (const s of S.values()) {
       if (x < s.b[0][0] || x > s.b[1][0] || y < s.b[0][1] || y > s.b[1][1] || !hitCtx.isPointInPath(s.p, x, y)) continue;
-      if (mode === "state") return { kind: "s", id: s.id, st: s.id };
+      if (mode === "state" && !wantCounty) return { kind: "s", id: s.id, st: s.id };
       for (const c of s.counties) {
         if (x < c.b[0][0] || x > c.b[1][0] || y < c.b[0][1] || y > c.b[1][1]) continue;
         if (hitCtx.isPointInPath(cp(c), x, y)) return { kind: "c", id: c.id, st: s.id };
@@ -998,15 +1244,19 @@ kbd {
     }
     return null;
   }
+  const namesOf = (idxs) => idxs.map((i) => esc(layers[i].name)).join(", ");
   function tipHTML(kind, id) {
+    const L = curLayer();
     if (kind === "s") {
       const s = S.get(id), on = sel.states.has(id);
       return `<b>${esc(s.name)}</b><span>${s.counties.length} ${s.counties.length === 1 ? "county" : "counties"}</span>` +
-        `<span class="tip-act">${on ? "Selected. Click to remove." : "Click to select the whole state"}</span>`;
+        `<span class="tip-act">${on ? `In ${esc(L.name)}. Click to remove.` : `Click to add the whole state to ${esc(L.name)}`}</span>`;
     }
-    const c = C.get(id), on = sel.counties.has(id);
+    const c = C.get(id), on = sel.counties.has(id), idxs = cover.get(id);
+    const act = mode === "origin" ? (L.o.has(id) ? "Origin of " + esc(L.name) + ". Click to clear." : "Click to make this the origin of " + esc(L.name))
+      : on ? `In ${esc(L.name)}. Click to remove.` : `Click to add to ${esc(L.name)}`;
     return `<b>${esc(c.full)}</b><span>${esc(S.get(c.st).name)} · FIPS ${c.id}</span>` +
-      `<span class="tip-act">${on ? "Selected. Click to remove." : "Click to select"}</span>`;
+      (idxs ? `<span>Covered by ${namesOf(idxs)}</span>` : "") + `<span class="tip-act">${act}</span>`;
   }
   function showTip(kind, id, e) {
     if (!tipFor || tipFor.kind !== kind || tipFor.id !== id) {
@@ -1045,13 +1295,29 @@ kbd {
     if (suppressClick) return;
     const hit = pickAt(e);
     if (!hit) return;
+    const touch = lastPointer === "touch";
+    if (mode === "origin") {
+      const on = toggleOrigin(hit.id);
+      if (touch) toast(`${on ? "Origin set to" : "Origin cleared:"} ${C.get(hit.id).full}, ${S.get(hit.st).abbr}`);
+      return;
+    }
     const kind = mode === "state" ? "s" : "c", id = kind === "s" ? hit.st : hit.id;
     const on = toggle(kind, id);
-    if (lastPointer === "touch") {
+    if (touch) {
       const c = kind === "c" ? C.get(id) : null;
       const label = kind === "s" ? S.get(id).name : `${c.full}, ${S.get(c.st).abbr}`;
       toast(`${on ? "Selected" : "Removed"} ${label}`);
     }
+  });
+  // middle-click marks where the vendor lives, in any mode
+  canvas.addEventListener("mousedown", (e) => { if (e.button === 1) e.preventDefault(); });
+  canvas.addEventListener("auxclick", (e) => {
+    if (e.button !== 1) return;
+    e.preventDefault();
+    const hit = pickAt(e, true);
+    if (!hit || hit.kind !== "c") return;
+    const on = toggleOrigin(hit.id);
+    toast(`${on ? "Origin of " + curLayer().name + ":" : "Origin cleared:"} ${C.get(hit.id).full}, ${S.get(hit.st).abbr}`);
   });
 
   /* box select: Shift-drag adds, Alt-drag removes */
@@ -1122,15 +1388,17 @@ kbd {
     mode = m;
     $("#modeState").setAttribute("aria-checked", String(m === "state"));
     $("#modeCounty").setAttribute("aria-checked", String(m === "county"));
+    $("#modeOrigin").setAttribute("aria-checked", String(m === "origin"));
     const what = m === "state" ? "a state" : "a county";
     hintEl.innerHTML = coarse
-      ? `<b>Tap ${what}</b> to select it. Pinch to zoom.`
-      : `<b>Click ${what}</b> to select it. Scroll to zoom, drag to pan. <b>Shift-drag</b> selects an area, <b>Alt-drag</b> removes.`;
+      ? (m === "origin" ? "<b>Tap a county</b> to mark where the vendor lives." : `<b>Tap ${what}</b> to add it to the layer. Pinch to zoom.`)
+      : (m === "origin" ? "<b>Click a county</b> to mark where the vendor lives. Scroll to zoom, drag to pan."
+        : `<b>Click ${what}</b> to add it. <b>Middle-click</b> marks the origin. Scroll to zoom, drag to pan. <b>Shift-drag</b> adds an area, <b>Alt-drag</b> removes.`);
     clearHover(); hideTip(); requestDraw();
-    save();
   }
   $("#modeState").addEventListener("click", () => setMode("state"));
   $("#modeCounty").addEventListener("click", () => setMode("county"));
+  $("#modeOrigin").addEventListener("click", () => setMode("origin"));
   $("#zoomIn").addEventListener("click", () => zoomBy(1.7));
   $("#zoomOut").addEventListener("click", () => zoomBy(1 / 1.7));
   $("#zoomHome").addEventListener("click", goHome);
@@ -1139,15 +1407,22 @@ kbd {
   const listEl = $("#list");
   const X_ICON = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg>';
 
-  function groups() {
+  function groups(L) {
+    L = L || curLayer();
     const m = new Map();
     const get = (st) => { let gr = m.get(st); if (!gr) m.set(st, gr = { s: S.get(st), whole: false, counties: [] }); return gr; };
-    for (const id of sel.states) get(id).whole = true;
-    for (const id of sel.counties) get(id.slice(0, 2)).counties.push(C.get(id));
+    for (const id of L.s) get(id).whole = true;
+    for (const id of L.c) get(id.slice(0, 2)).counties.push(C.get(id));
     const arr = [...m.values()].sort((a, b) => a.s.name.localeCompare(b.s.name));
     for (const gr of arr) gr.counties.sort(byName);
     return arr;
   }
+  const byDot = (key) => {
+    if (!board) return "";
+    const b = board.by.get(curLayer().id + ":" + key);
+    return b ? `<i class="by" style="background:${safeColor(b.color)}" title="Added by ${esc(b.name)}"></i>` : "";
+  };
+  const STAR = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 1.2l2.1 4.5 4.9.6-3.6 3.4.9 4.9L8 12.2 3.7 14.6l.9-4.9L1 6.3l4.9-.6z" fill="currentColor"/></svg>';
 
   function renderList() {
     const gs = groups();
@@ -1161,8 +1436,8 @@ kbd {
     }
     if (!gs.length) {
       html += '<div class="empty"><b>Nothing selected yet</b>' +
-        '<p>Click a state on the map to select it. To pick single counties, switch the map to <b>Counties</b> and zoom in.</p>' +
-        '<p>You can also type a name in the search box above.</p></div>';
+        '<p>Click counties on the map to add them to this layer, and zoom in to see them. Switch to <b>States</b> to take a whole state at once.</p>' +
+        '<p><b>Middle-click</b> a county to mark where the vendor lives. You can also type a name in the search box, or use Import.</p></div>';
     }
     for (const gr of gs) {
       const s = gr.s, total = s.counties.length, n = gr.counties.length;
@@ -1177,9 +1452,10 @@ kbd {
       if (n) {
         html += '<ul class="rows">';
         for (const c of gr.counties) {
-          html += `<li class="row${justAdded === "c" + c.id ? " new" : ""}" data-hl="c${c.id}"><span class="sw sw-county" aria-hidden="true"></span>` +
-            `<button type="button" class="row-name" data-zoom-county="${c.id}" title="Zoom to ${esc(c.full)}">${esc(c.full)}</button>` +
-            `<span class="fips">${c.id}</span>` +
+          const isO = sel.origins.has(c.id);
+          html += `<li class="row${justAdded === "c" + c.id ? " new" : ""}${isO ? " origin" : ""}" data-hl="c${c.id}">${isO ? `<span class="sw-pin" title="Origin">${STAR}</span>` : '<span class="sw sw-county" aria-hidden="true"></span>'}` +
+            `<button type="button" class="row-name" data-zoom-county="${c.id}" title="Zoom to ${esc(c.full)}">${esc(c.full)}${isO ? ' <span class="otag">Origin</span>' : ""}</button>` +
+            `<span class="fips">${byDot("c" + c.id)}${c.id}</span>` +
             `<button type="button" class="x" data-rm-county="${c.id}" aria-label="Remove ${esc(c.full)}">${X_ICON}</button></li>`;
         }
         html += "</ul>";
@@ -1203,13 +1479,15 @@ kbd {
   function renderTotals() {
     setCount($("#nStates"), sel.states.size);
     setCount($("#nCounties"), sel.counties.size.toLocaleString());
-    const empty = !sel.states.size && !sel.counties.size;
-    $("#copyList").disabled = empty;
-    $("#copyCsv").disabled = empty;
-    $("#clearAll").disabled = empty;
+    const anything = layers.some((l) => l.s.size || l.c.size);
+    $("#copyList").disabled = !anything;
+    $("#copyCsv").disabled = !anything;
+    $("#clearAll").disabled = !sel.states.size && !sel.counties.size;
   }
 
   function paint() {
+    rebuildCover();
+    renderChips();
     requestDraw();
     renderList();
     renderTotals();
@@ -1228,9 +1506,9 @@ kbd {
     const n = sel.states.size + sel.counties.size;
     if (!n) return;
     const before = snapshot();
-    sel.states.clear(); sel.counties.clear();
+    sel.states.clear(); sel.counties.clear(); sel.origins.clear();
     commit();
-    toast(`Cleared ${n} ${n === 1 ? "item" : "items"}`, "Undo", () => restore(before));
+    toast(`Cleared ${curLayer().name}`, "Undo", () => restore(before));
   }
 
   listEl.addEventListener("click", (e) => {
@@ -1254,25 +1532,35 @@ kbd {
   $("#clearAll").addEventListener("click", clearAll);
 
   /* copy */
+  const placeLabel = (id) => `${C.get(id).full}, ${S.get(C.get(id).st).abbr}`;
   function textList() {
-    const out = [];
-    for (const gr of groups()) {
-      if (gr.whole) out.push(`${gr.s.name} (whole state)`);
-      for (const c of gr.counties) out.push(`${c.full}, ${gr.s.abbr}`);
+    const out = [], multi = layers.length > 1;
+    for (const L of layers) {
+      if (!L.s.size && !L.c.size) continue;
+      if (multi) out.push(`# ${L.name}`);
+      for (const id of L.o) out.push(`Origin: ${placeLabel(id)}`);
+      for (const gr of groups(L)) {
+        if (gr.whole) out.push(`${gr.s.name} (whole state)`);
+        for (const c of gr.counties) out.push(placeLabel(c.id));
+      }
+      if (multi) out.push("");
     }
-    return out.join("\n");
+    return out.join("\n").trim();
   }
   function textCSV() {
     const cell = (v) => (/[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v));
-    const rows = [["type", "name", "state", "state_abbr", "fips"]];
-    for (const gr of groups()) {
-      if (gr.whole) rows.push(["state", gr.s.name, gr.s.name, gr.s.abbr, gr.s.id]);
-      for (const c of gr.counties) rows.push(["county", c.full, gr.s.name, gr.s.abbr, c.id]);
+    const rows = [["type", "name", "state", "state_abbr", "fips", "layer"]];
+    for (const L of layers) {
+      for (const id of L.o) { const c = C.get(id), s = S.get(c.st); rows.push(["origin", c.full, s.name, s.abbr, c.id, L.name]); }
+      for (const gr of groups(L)) {
+        if (gr.whole) rows.push(["state", gr.s.name, gr.s.name, gr.s.abbr, gr.s.id, L.name]);
+        for (const c of gr.counties) rows.push(["county", c.full, gr.s.name, gr.s.abbr, c.id, L.name]);
+      }
     }
     return rows.map((r) => r.map(cell).join(",")).join("\n");
   }
-  function copyText(text, what) {
-    const n = sel.states.size + sel.counties.size;
+  function copyText(text, what, msg) {
+    const n = layers.reduce((t, l) => t + l.s.size + l.c.size, 0);
     const fallback = () => {
       $("#copySheet").hidden = false;
       const ta = $("#copyText");
@@ -1282,7 +1570,7 @@ kbd {
     };
     try {
       navigator.clipboard.writeText(text)
-        .then(() => toast(`Copied ${n} ${n === 1 ? "item" : "items"} as ${what}`))
+        .then(() => toast(msg || `Copied ${n} ${n === 1 ? "item" : "items"} as ${what}`))
         .catch(fallback);
     } catch (e) { fallback(); }
   }
@@ -1364,10 +1652,10 @@ kbd {
   function pick(it) {
     const set = it.kind === "s" ? sel.states : sel.counties;
     const was = set.has(it.id);
-    if (!was) { set.add(it.id); justAdded = it.kind + it.id; popAt(it.kind, it.id); commit(); }
+    if (!was) { set.add(it.id); justAdded = it.kind + it.id; popAt(it.kind, it.id, lcol(curLayer())); commit(); }
     setMode(it.kind === "s" ? "state" : "county");
     zoomToBounds(it.kind === "s" ? S.get(it.id).b : C.get(it.id).b, it.kind === "s" ? 12 : 30);
-    toast(was ? `${it.label} is already selected` : `Selected ${it.label}`);
+    toast(was ? `${it.label} is already in ${curLayer().name}` : `Added ${it.label} to ${curLayer().name}`);
     qEl.value = "";
     closeResults();
   }
@@ -1403,6 +1691,7 @@ kbd {
     switch (e.key) {
       case "s": case "S": setMode("state"); break;
       case "c": case "C": setMode("county"); break;
+      case "o": case "O": setMode("origin"); break;
       case "+": case "=": zoomBy(1.7); break;
       case "-": case "_": zoomBy(1 / 1.7); break;
       case "0": goHome(); break;
@@ -1411,15 +1700,704 @@ kbd {
       case "ArrowUp": panBy(0, 140); break;
       case "ArrowDown": panBy(0, -140); break;
       case "/": e.preventDefault(); qEl.focus(); break;
+      case "1": case "2": case "3": case "4": case "5": case "6": case "7": case "8": case "9": activateLayerIndex(Number(e.key) - 1); break;
       default: return;
     }
   });
 
+  /* ---------- boards: shared selections with live cursors ---------- */
+  const API = "https://br-dark-surf-aomc7503-boards.compute.c-2.ap-southeast-1.aws.neon.tech";
+  const BASE = /github\.io$/.test(location.hostname) ? "/" + location.pathname.split("/")[1] + "/" : "/";
+  const PALETTE = ["#d9480f", "#2b8a3e", "#1c7ed6", "#9c36b5", "#c2255c", "#0c8599", "#5f3dc4", "#a61e4d"];
+  const ADJ = ["Quiet", "Brisk", "Sunny", "Clever", "Gentle", "Bold", "Calm", "Swift", "Merry", "Steady"];
+  const ANI = ["Otter", "Heron", "Lynx", "Finch", "Badger", "Marten", "Kestrel", "Bison", "Gecko", "Puffin"];
+  const safeColor = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? c : "#555555");
+  const initials = (n) => (n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("") || "?").toUpperCase();
+
+  const me = (() => {
+    let m = null;
+    try { m = JSON.parse(localStorage.getItem("scp:me")); } catch (e) { /* none saved */ }
+    if (!m || typeof m.name !== "string" || !/^#[0-9a-f]{6}$/i.test(m.color || "")) {
+      const pick = (a) => a[Math.floor(Math.random() * a.length)];
+      m = { name: pick(ADJ) + " " + pick(ANI), color: pick(PALETTE) };
+    }
+    let id = null;
+    try { id = sessionStorage.getItem("scp:client"); } catch (e) { /* ignore */ }
+    if (!id || !/^[a-z0-9]{6,24}$/.test(id)) id = (Math.random().toString(36).slice(2, 12) + Date.now().toString(36).slice(-4)).toLowerCase();
+    try { sessionStorage.setItem("scp:client", id); } catch (e) { /* ignore */ }
+    return { name: m.name.slice(0, 24), color: m.color, client: id };
+  })();
+  const saveMe = () => { try { localStorage.setItem("scp:me", JSON.stringify({ name: me.name, color: me.color })); } catch (e) { /* ignore */ } };
+
+  let board = null, routeSeq = 0, localBackup = null, cursorScreen = null;
+  const boxEl2 = $("#boardBox"), liveEl = $("#live"), gateEl = $("#gate"), gateCard = $("#gateCard");
+
+  async function api(path, body) {
+    const r = await fetch(API + path, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify(body) });
+    let j = null;
+    try { j = await r.json(); } catch (e) { /* not json */ }
+    if (!r.ok) { const err = new Error((j && j.error) || "Error " + r.status); err.status = r.status; throw err; }
+    return j;
+  }
+
+  /* routes: /name is an open board, /l/name is locked */
+  const slugify = (s) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32);
+  const pathFor = (r) => (r.locked ? "l/" : "") + r.slug;
+  function parseRoute() {
+    const p = new URLSearchParams(location.search).get("p");
+    if (p) history.replaceState(null, "", BASE + p.replace(/^\/+/, ""));
+    const path = location.pathname.startsWith(BASE) ? location.pathname.slice(BASE.length) : location.pathname.replace(/^\/+/, "");
+    const parts = path.split("/").filter(Boolean);
+    if (parts.length === 1 && parts[0].includes(".")) return null;   // index.html and other files
+    if (parts[0] === "l" && parts[1]) return { slug: slugify(decodeURIComponent(parts[1])), locked: true };
+    if (parts.length === 1) return { slug: slugify(decodeURIComponent(parts[0])), locked: false };
+    return null;
+  }
+  function navigate(path, replace) {
+    history[replace ? "replaceState" : "pushState"](null, "", BASE + path);
+    handleRoute();
+  }
+  const tokKey = (slug) => "scp:tok:" + slug;
+  function remember(r) {
+    try {
+      const list = (JSON.parse(localStorage.getItem("scp:recent")) || []).filter((x) => x.slug !== r.slug);
+      list.unshift({ slug: r.slug, locked: !!r.locked });
+      localStorage.setItem("scp:recent", JSON.stringify(list.slice(0, 5)));
+    } catch (e) { /* ignore */ }
+  }
+  function recentList() {
+    try { return (JSON.parse(localStorage.getItem("scp:recent")) || []).filter((x) => /^[a-z0-9-]{3,32}$/.test(x.slug)); } catch (e) { return []; }
+  }
+
+  /* gate: loading, create, unlock and error screens */
+  function showGate(html) {
+    gateCard.innerHTML = html;
+    gateEl.hidden = false;
+    const f = gateCard.querySelector("input:not([type=checkbox])");
+    if (f) f.focus();
+  }
+  function hideGate() { gateEl.hidden = true; gateCard.innerHTML = ""; }
+  const gHead = (r, kicker) => `<p class="g-kicker">${kicker}</p><h2>${r.locked ? "/l/" : "/"}${esc(r.slug)}</h2>`;
+  function gateLoading(r) { showGate(gHead(r, r.locked ? "Locked board" : "Board") + '<p class="g-note">Opening…</p>'); }
+  function gateError(r, msg) {
+    showGate(gHead(r, "Can't open this board") + `<p class="g-note">${esc(msg)}</p><div class="g-actions"><button class="btn solid" type="button" data-act="retry">Try again</button><button class="btn" type="button" data-act="back">Back to the map</button></div>`);
+    gateCard.dataset.r = JSON.stringify(r);
+  }
+  function gateCreate(r) {
+    const n = localBackup ? localBackup.layers.reduce((t, l) => t + l.s.size + l.c.size, 0) : 0;
+    showGate(gHead(r, r.locked ? "New locked board" : "New board") +
+      `<p class="g-note">${r.locked ? "This board doesn't exist yet. Set a password to create it. Everyone who opens it will need that password, and it can't be reset." : "This board doesn't exist yet. Create it, then share the link. Anyone with the link can add and edit."}</p>` +
+      `<form id="gForm" class="g-form" data-kind="create">` +
+      (r.locked ? '<label for="gPw">Password (4 or more characters)</label><input id="gPw" type="password" minlength="4" maxlength="64" required autocomplete="new-password">' : "") +
+      (n ? `<label class="g-check"><input id="gMine" type="checkbox" checked> Start with my current selection (${n} ${n === 1 ? "item" : "items"})</label>` : "") +
+      '<p class="g-err" id="gErr" role="alert"></p><div class="g-actions"><button class="btn solid" type="submit">Create board</button><button class="btn" type="button" data-act="back">Back to the map</button></div></form>');
+    gateCard.dataset.r = JSON.stringify(r);
+  }
+  function gateUnlock(r, msg) {
+    showGate(gHead(r, "Locked board") + '<p class="g-note">Enter the password to open this board.</p>' +
+      '<form id="gForm" class="g-form" data-kind="unlock"><label for="gPw">Password</label><input id="gPw" type="password" maxlength="64" required autocomplete="current-password">' +
+      `<p class="g-err" id="gErr" role="alert">${esc(msg || "")}</p><div class="g-actions"><button class="btn solid" type="submit">Open</button><button class="btn" type="button" data-act="back">Back to the map</button></div></form>`);
+    gateCard.dataset.r = JSON.stringify(r);
+  }
+  gateCard.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const r = gateCard.dataset.r ? JSON.parse(gateCard.dataset.r) : null;
+    if (b.dataset.act === "back") navigate("");
+    else if (b.dataset.act === "retry" && r) enterBoard(r);
+  });
+  gateCard.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = e.target, r = JSON.parse(gateCard.dataset.r), err = $("#gErr"), btn = form.querySelector("button[type=submit]");
+    const pw = form.querySelector("#gPw") ? form.querySelector("#gPw").value : "";
+    btn.disabled = true; err.textContent = "";
+    try {
+      if (form.dataset.kind === "create") {
+        const mine = form.querySelector("#gMine") && form.querySelector("#gMine").checked && localBackup;
+        const j = await api("/board/create", {
+          slug: r.slug, locked: r.locked, password: r.locked ? pw : undefined, name: me.name, color: me.color,
+          layers: mine ? localBackup.layers.map((l) => ({ name: l.name, color: l.color, s: [...l.s], c: [...l.c], o: [...l.o] })) : undefined,
+        });
+        remember(r);
+        startSession(r, j.token || null);
+      } else {
+        const j = await api("/board/unlock", { slug: r.slug, password: pw });
+        startSession(r, j.token || null);
+      }
+    } catch (ex) {
+      btn.disabled = false;
+      err.textContent = ex.status ? ex.message : "Can't reach the server. Check your connection.";
+    }
+  });
+
+  async function enterBoard(r) {
+    const my = ++routeSeq;
+    if (board) stopSession();
+    if (!localBackup) localBackup = snapshot();
+    renderBoardBox();
+    gateLoading(r);
+    let info;
+    try { info = await api("/board/info", { slug: r.slug }); }
+    catch (e) { if (my === routeSeq) gateError(r, e.status ? e.message : "Can't reach the server. Check your connection."); return; }
+    if (my !== routeSeq) return;
+    if (r.slug.length < 3) { gateError(r, "Board names need 3 to 32 letters, numbers or dashes."); return; }
+    if (!info.exists) { gateCreate(r); return; }
+    if (info.locked !== r.locked) { r = { slug: r.slug, locked: info.locked }; history.replaceState(null, "", BASE + pathFor(r)); }
+    if (info.locked) {
+      let tok = null;
+      try { tok = sessionStorage.getItem(tokKey(r.slug)); } catch (e) { /* ignore */ }
+      if (tok) startSession(r, tok); else gateUnlock(r);
+    } else startSession(r, null);
+  }
+
+  function startSession(r, token) {
+    if (board) stopSession();
+    if (token) { try { sessionStorage.setItem(tokKey(r.slug), token); } catch (e) { /* ignore */ } }
+    remember(r);
+    layers = [mkLayer(0, "Layer 1", LAYER_COLORS[0])];
+    activeId = 0;
+    isExample = false;
+    board = { slug: r.slug, locked: r.locked, token, v: -1, act: 0, peers: new Map(), activity: [], by: new Map(), shadow: new Map(), inflight: 0, timer: 0, flushTimer: 0, metaPending: false, syncing: false, stopped: false, online: true, now: 0, nowAt: 0, liveHtml: "" };
+    document.title = `${r.locked ? "/l/" : "/"}${r.slug} · State & County Picker`;
+    hideGate();
+    renderBoardBox();
+    renderLayers();
+    paint();
+    renderLive();
+    syncOnce();
+  }
+  function stopSession() {
+    if (!board) return;
+    board.stopped = true;
+    clearTimeout(board.timer); clearTimeout(board.flushTimer);
+    board = null;
+    liveEl.hidden = true;
+  }
+  function leaveBoard() {
+    routeSeq++;
+    stopSession();
+    hideGate();
+    document.title = "State & County Picker";
+    if (localBackup) {
+      layers = localBackup.layers.map((l) => ({ ...l, s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) }));
+      activeId = layers.some((l) => l.id === localBackup.active) ? localBackup.active : layers[0].id;
+      localBackup = null;
+    }
+    renderBoardBox();
+    renderLayers();
+    paint();
+  }
+  function handleRoute() {
+    const r = parseRoute();
+    if (!r) leaveBoard(); else enterBoard(r);
+  }
+
+  /* sync loop: one request carries my cursor and returns who else is here and what changed */
+  function scheduleSync() {
+    const b = board;
+    if (!b || b.stopped) return;
+    clearTimeout(b.timer);
+    b.timer = setTimeout(syncOnce, document.hidden ? 5000 : b.peers.size ? 600 : 1600);
+  }
+  function syncSoon() { if (board && !board.syncing) { clearTimeout(board.timer); board.timer = setTimeout(syncOnce, 0); } }
+  async function syncOnce() {
+    const b = board;
+    if (!b || b.syncing || b.stopped) return;
+    b.syncing = true;
+    clearTimeout(b.timer);
+    try {
+      const w = cursorScreen ? cur.invert(cursorScreen) : null;
+      const j = await api("/board/sync", {
+        slug: b.slug, token: b.token, client: me.client, name: me.name, color: me.color,
+        x: w ? w[0] : null, y: w ? w[1] : null, hover: hover ? hover.kind + hover.id : null, v: b.v, act: b.act, full: b.v < 0,
+      });
+      if (board !== b) return;
+      b.online = true;
+      applySync(b, j);
+    } catch (e) {
+      if (board !== b) return;
+      const r = { slug: b.slug, locked: b.locked };
+      if (e.status === 401) { try { sessionStorage.removeItem(tokKey(b.slug)); } catch (x) { /* ignore */ } stopSession(); gateUnlock(r, "Your session ended. Enter the password again."); return; }
+      if (e.status === 404) { stopSession(); gateCreate(r); return; }
+      b.online = false;
+      renderLive();
+    } finally {
+      b.syncing = false;
+      if (board === b) scheduleSync();
+    }
+  }
+  function applySync(b, j) {
+    b.now = j.now; b.nowAt = performance.now();
+    const next = new Map();
+    for (const p of j.peers) {
+      const old = b.peers.get(p.client);
+      const x = p.x == null ? null : +p.x, y = p.y == null ? null : +p.y;
+      next.set(p.client, { name: p.name, color: safeColor(p.color), x, y, hover: p.hover, px: old && old.px != null ? old.px : x, py: old && old.py != null ? old.py : y });
+    }
+    b.peers = next;
+    for (const a of j.act) {
+      if (Number(a.seq) > b.act) { b.act = Number(a.seq); b.activity.push({ who: a.who, color: a.color, text: a.text, ts: Number(a.ts) }); }
+    }
+    if (b.activity.length > 40) b.activity = b.activity.slice(-40);
+    const pending = b.inflight > 0 || b.flushTimer || b.metaPending || diff();
+    if (j.items) { if (!pending) { applyItems(b, j.items, j.layers || [], b.v < 0); b.v = j.v; } }
+    else if (!pending) b.v = j.v;
+    renderLive();
+    requestDraw();
+  }
+  function applyItems(b, items, meta, first) {
+    const next = (meta.length ? meta : [{ id: 0, name: "Layer 1", color: "#111111" }]).map((m) => mkLayer(m.id, String(m.name).slice(0, 32), safeColor(m.color)));
+    const byId = new Map(next.map((l) => [l.id, l]));
+    const by = new Map();
+    for (const [li, k, id, name, color] of items) {
+      const L = byId.get(li);
+      if (!L) continue;
+      if (k === "s") { if (!S.has(id)) continue; L.s.add(id); }
+      else if (k === "c") { if (!C.has(id)) continue; L.c.add(id); }
+      else if (k === "o") { if (!C.has(id)) continue; L.o.add(id); }
+      by.set(li + ":" + k + id, { name, color: safeColor(color) });
+    }
+    if (!first) {
+      let n = 0;
+      for (const L of next) {
+        const old = layers.find((x) => x.id === L.id);
+        for (const id of L.c) if (!(old && old.c.has(id)) && n++ < 12) popAt("c", id, lcol(L));
+        for (const id of L.s) if (!(old && old.s.has(id)) && n++ < 12) popAt("s", id, lcol(L));
+      }
+    }
+    layers = next;
+    if (!layers.some((l) => l.id === activeId)) activeId = layers[0].id;
+    b.by = by;
+    b.shadow = new Map(next.map((l) => [l.id, { s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) }]));
+    isExample = false;
+    if (!document.activeElement || document.activeElement.id !== "layName") renderEdit();
+    paint();
+  }
+
+  /* outgoing changes: set operations, so edits from different people merge */
+  const KINDS3 = ["s", "c", "o"];
+  function diff() {
+    const b = board;
+    if (!b) return null;
+    const out = [];
+    for (const L of layers) {
+      const sh = b.shadow.get(L.id) || { s: new Set(), c: new Set(), o: new Set() };
+      const g = { id: L.id, adds: { s: [], c: [], o: [] }, removes: { s: [], c: [], o: [] } };
+      let n = 0;
+      for (const k of KINDS3) {
+        for (const id of L[k]) if (!sh[k].has(id)) { g.adds[k].push(id); n++; }
+        for (const id of sh[k]) if (!L[k].has(id)) { g.removes[k].push(id); n++; }
+      }
+      if (n) out.push(g);
+    }
+    return out.length ? out : null;
+  }
+  function syncOut() {
+    if (!board) return;
+    clearTimeout(board.flushTimer);
+    board.flushTimer = setTimeout(flush, 80);
+  }
+  const placeName = (id) => `${C.get(id).full}, ${S.get(C.get(id).st).abbr}`;
+  const phrase = (s, c) => {
+    const n = s.length + c.length;
+    if (n === 1) return s.length ? S.get(s[0]).name : placeName(c[0]);
+    return s.length && !c.length ? `${n} states` : c.length && !s.length ? `${n} counties` : `${n} items`;
+  };
+  function describeChange(g) {
+    const L = layers.find((x) => x.id === g.id);
+    const parts = [];
+    const cAdd = g.adds.c.filter((id) => !g.adds.o.includes(id));
+    if (g.adds.o.length) parts.push("set the origin to " + placeName(g.adds.o[0]) + (g.adds.o.length > 1 ? ` and ${g.adds.o.length - 1} more` : ""));
+    if (g.adds.s.length + cAdd.length) parts.push("added " + phrase(g.adds.s, cAdd));
+    if (g.removes.o.length && !g.removes.o.every((id) => g.removes.c.includes(id))) parts.push("cleared the origin");
+    if (g.removes.s.length + g.removes.c.length) parts.push("removed " + phrase(g.removes.s, g.removes.c));
+    return parts.join(" and ") + (L && layers.length > 1 ? ` in ${L.name}` : "");
+  }
+  async function flush() {
+    const b = board;
+    if (!b) return;
+    b.flushTimer = 0;
+    const d = diff();
+    if (!d) return;
+    for (const g of d) {
+      const sh = b.shadow.get(g.id) || (b.shadow.set(g.id, { s: new Set(), c: new Set(), o: new Set() }), b.shadow.get(g.id));
+      for (const k of KINDS3) {
+        for (const id of g.adds[k]) { sh[k].add(id); b.by.set(g.id + ":" + k + id, { name: me.name, color: me.color }); }
+        for (const id of g.removes[k]) { sh[k].delete(id); b.by.delete(g.id + ":" + k + id); }
+      }
+    }
+    const text = d.map(describeChange).join("; ");
+    b.inflight++;
+    try {
+      await api("/board/ops", { slug: b.slug, token: b.token, name: me.name, color: me.color, layers: d, text });
+    } catch (e) {
+      if (board === b) {
+        toast(e.status === 429 ? "Slow down a little. That change was not saved." : "Couldn't save that change. Reloading the board.");
+        b.v = -1;
+      }
+    } finally {
+      b.inflight--;
+      if (board === b) { renderLive(); syncSoon(); }
+    }
+  }
+
+  /* panel: board box and live strip */
+  function renderBoardBox() {
+    if (!board) {
+      const rec = recentList().slice(0, 3).map((x) => `<a href="${BASE}${pathFor(x)}" data-go="${pathFor(x)}">${x.locked ? "🔒 " : ""}/${esc(x.slug)}</a>`).join("");
+      boxEl2.innerHTML = '<div class="bb"><div class="bb-title">Shared board</div>' +
+        '<form id="bbForm" class="bb-row"><span class="bb-slash" aria-hidden="true">/</span><label for="bbName" class="sr-only">Board name</label>' +
+        '<input id="bbName" type="text" maxlength="40" placeholder="board-name" title="Open or start a page everyone edits together, live" autocomplete="off" spellcheck="false">' +
+        '<label class="bb-lock" for="bbLock" title="Require a password"><input id="bbLock" type="checkbox"> Lock</label><button class="btn solid" type="submit">Go</button></form>' +
+        (rec ? `<div class="recent" aria-label="Recent boards">${rec}</div>` : "") + "</div>";
+    } else {
+      boxEl2.innerHTML = `<div class="bb"><div class="bb-top"><span class="bb-slug">${board.locked ? '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" role="img" aria-label="Locked"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>' : ""}${board.locked ? "/l/" : "/"}${esc(board.slug)}</span>` +
+        '<button class="btn" id="bbCopy" type="button">Copy link</button><button class="btn" id="bbLeave" type="button">Leave</button></div>' +
+        `<div class="bb-me"><button type="button" class="av self" id="bbColor" style="--c:${me.color}" aria-label="Change your color" title="Change your color">${esc(initials(me.name))}</button>` +
+        `<label for="bbMe" class="sr-only">Your name</label><input id="bbMe" type="text" maxlength="24" value="${esc(me.name)}" autocomplete="off" spellcheck="false"></div></div>`;
+    }
+  }
+  boxEl2.addEventListener("submit", (e) => {
+    if (e.target.id !== "bbForm") return;
+    e.preventDefault();
+    const slug = slugify($("#bbName").value);
+    if (slug.length < 3) { toast("Board names need 3 to 32 letters, numbers or dashes."); return; }
+    navigate(pathFor({ slug, locked: $("#bbLock").checked }));
+  });
+  boxEl2.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-go]");
+    if (a) { e.preventDefault(); navigate(a.dataset.go); return; }
+    const id = e.target.closest("button") && e.target.closest("button").id;
+    if (id === "bbLeave") navigate("");
+    else if (id === "bbCopy") copyText(location.origin + BASE + pathFor(board), "link", "Link copied. Anyone with it can join" + (board.locked ? " (they need the password)." : "."));
+    else if (id === "bbColor") {
+      me.color = PALETTE[(PALETTE.indexOf(me.color) + 1) % PALETTE.length];
+      saveMe(); renderBoardBox(); renderLive(); syncSoon();
+    }
+  });
+  boxEl2.addEventListener("input", (e) => {
+    if (e.target.id !== "bbMe") return;
+    me.name = e.target.value.replace(/[<>]/g, "").slice(0, 24) || "Guest";
+    saveMe();
+    const av = $("#bbColor"); if (av) av.textContent = initials(me.name);
+  });
+  boxEl2.addEventListener("change", (e) => { if (e.target.id === "bbMe") { renderLive(); syncSoon(); } });
+
+  const ago = (b, ts) => {
+    const s = Math.max(0, Math.round(b.now + (performance.now() - b.nowAt) / 1000 - ts));
+    return s < 5 ? "now" : s < 60 ? s + "s" : s < 3600 ? Math.floor(s / 60) + "m" : Math.floor(s / 3600) + "h";
+  };
+  function renderLive() {
+    const b = board;
+    if (!b) { liveEl.hidden = true; return; }
+    liveEl.hidden = false;
+    const peers = [...b.peers.entries()];
+    const avs = [`<button type="button" class="av self" style="--c:${me.color}" data-self="1" title="${esc(me.name)} (you)">${esc(initials(me.name))}</button>`]
+      .concat(peers.map(([id, p]) => `<button type="button" class="av" style="--c:${p.color}" data-peer="${id}" title="${esc(p.name)} · click to jump to them">${esc(initials(p.name))}</button>`)).join("");
+    const feed = b.activity.slice(-3).reverse().map((a) => `<li><i class="by" style="background:${safeColor(a.color)}"></i><span><b>${esc(a.who)}</b> ${esc(a.text)}</span><time>${ago(b, a.ts)}</time></li>`).join("");
+    const html = `<div class="live-head"><span class="pulse${b.online ? "" : " off"}"></span><span>${b.online ? `Live · ${peers.length + 1} here` : "Reconnecting…"}</span></div>` +
+      `<div class="avs">${avs}</div>` + (feed ? `<ul class="feed" aria-label="Recent changes">${feed}</ul>` : "");
+    if (html !== b.liveHtml) { liveEl.innerHTML = html; b.liveHtml = html; }
+  }
+  liveEl.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-peer]");
+    if (!a || !board) return;
+    const p = board.peers.get(a.dataset.peer);
+    if (!p || p.x == null) { toast(`${p ? p.name : "They"} isn't pointing at the map right now`); return; }
+    const k = Math.max(cur.k, base.k * 4);
+    animate(view).call(zoom.transform, d3.zoomIdentity.translate(vw / 2 - k * p.x, vh / 2 - k * p.y).scale(k));
+  });
+  setInterval(() => { if (board && !document.hidden) renderLive(); }, 5000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) syncSoon(); });
+  window.addEventListener("popstate", handleRoute);
+
+  /* other people's cursors, pointed-at shapes and off-screen markers */
+  canvas.addEventListener("pointermove", (e) => {
+    const r = canvas.getBoundingClientRect();
+    cursorScreen = [e.clientX - r.left, e.clientY - r.top];
+  });
+  canvas.addEventListener("pointerleave", () => { cursorScreen = null; });
+  function drawPeers() {
+    if (!board || !board.peers.size) return false;
+    let moving = false;
+    const k = cur.k;
+    ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * cur.x, dpr * cur.y);
+    ctx.lineJoin = "round";
+    for (const p of board.peers.values()) {
+      if (p.x == null || p.px == null) continue;
+      const dx = p.x - p.px, dy = p.y - p.py;
+      if (Math.abs(dx) * k > 0.15 || Math.abs(dy) * k > 0.15) { p.px += dx * 0.3; p.py += dy * 0.3; moving = true; } else { p.px = p.x; p.py = p.y; }
+      if (p.hover) {
+        const id = p.hover.slice(1), shape = p.hover[0] === "s" ? S.has(id) && S.get(id).p : C.has(id) && cp(C.get(id));
+        if (shape) { ctx.strokeStyle = p.color; ctx.lineWidth = 3 / k; ctx.globalAlpha = 0.9; ctx.stroke(shape); ctx.globalAlpha = 1; }
+      }
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.textAlign = "left"; ctx.textBaseline = "middle"; setSpacing(0);
+    const top = toolbarEl.offsetHeight + 24;
+    for (const p of board.peers.values()) {
+      if (p.x == null || p.px == null) continue;
+      const [sx, sy] = cur.apply([p.px, p.py]);
+      if (sx < 0 || sy < 0 || sx > vw || sy > vh) {
+        const ex = Math.max(20, Math.min(vw - 20, sx)), ey = Math.max(top, Math.min(vh - 20, sy));
+        ctx.fillStyle = p.color; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(ex, ey, 12, 0, 6.2832); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#fff"; ctx.font = `700 10px ${FONT}`; ctx.textAlign = "center";
+        ctx.fillText(initials(p.name), ex, ey + 0.5);
+        ctx.textAlign = "left";
+        continue;
+      }
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(0, 15); ctx.lineTo(4, 11.5); ctx.lineTo(7, 18); ctx.lineTo(9.6, 16.8); ctx.lineTo(6.8, 10.6); ctx.lineTo(11.5, 10.6); ctx.closePath();
+      ctx.fillStyle = p.color; ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.6;
+      ctx.stroke(); ctx.fill();
+      ctx.font = `600 12px ${FONT}`;
+      const w = ctx.measureText(p.name).width + 14;
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(12, 16, w, 20, 10) : ctx.rect(12, 16, w, 20);
+      ctx.fillStyle = p.color; ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.fillText(p.name, 19, 26.5);
+      ctx.restore();
+    }
+    return moving;
+  }
+
+  /* ---------- layer bar ---------- */
+  const chipsEl = $("#layChips"), editEl = $("#layEdit");
+  const lcolCss = (L) => (L.color === "#111111" ? "var(--hl)" : L.color);
+  function renderChips() {
+    document.documentElement.style.setProperty("--lc", lcolCss(curLayer()));
+    chipsEl.innerHTML = layers.map((L) => `<button type="button" role="tab" class="lay${L.id === activeId ? " on" : ""}" data-lay="${L.id}" aria-selected="${L.id === activeId}" style="--c:${lcolCss(L)}" title="${esc(L.name)}"><i></i><span>${esc(L.name)}</span><em>${L.c.size + L.s.size}</em></button>`).join("") +
+      (layers.length < 12 ? '<button type="button" class="lay add" data-addlay="1" title="Add another coverage layer">+ Layer</button>' : "");
+  }
+  let delArmed = 0;
+  function renderEdit() {
+    const L = curLayer();
+    editEl.innerHTML = `<label class="sr-only" for="layName">Layer name</label><input id="layName" type="text" maxlength="32" value="${esc(L.name)}" autocomplete="off" spellcheck="false" placeholder="Name this layer">` +
+      `<div class="swatches" role="group" aria-label="Layer color">${LAYER_COLORS.map((c) => `<button type="button" class="swt${c === L.color ? " on" : ""}" data-color="${c}" style="--c:${c === "#111111" ? "var(--hl)" : c}" aria-label="Color ${c}" aria-pressed="${c === L.color}"></button>`).join("")}</div>` +
+      (layers.length > 1 ? `<button type="button" class="btn danger" data-dellay="1">${delArmed ? "Click again to delete" : "Delete layer"}</button>` : "");
+  }
+  function renderLayers() { renderChips(); renderEdit(); }
+  let metaTimer = 0;
+  function pushMeta(L) {
+    if (!board) return;
+    const b = board;
+    b.metaPending = true;
+    clearTimeout(metaTimer);
+    metaTimer = setTimeout(async () => {
+      try { await api("/board/layer", { slug: b.slug, token: b.token, op: "update", id: L.id, name: L.name, color: L.color, who: me.name, whoColor: me.color }); }
+      catch (e) { toast(e.message || "Couldn't save the layer"); }
+      finally { b.metaPending = false; if (board === b) syncSoon(); }
+    }, 450);
+  }
+  function setActive(id) {
+    if (!layers.some((l) => l.id === id)) return;
+    activeId = id; delArmed = 0;
+    renderEdit(); paint();
+  }
+  async function addLayer() {
+    if (layers.length >= 12) { toast("A board can have up to 12 layers."); return; }
+    const used = new Set(layers.map((l) => l.color));
+    const color = LAYER_COLORS.find((c) => !used.has(c)) || LAYER_COLORS[layers.length % LAYER_COLORS.length];
+    const name = `Layer ${layers.length + 1}`;
+    let id = 0;
+    if (board) {
+      const b = board;
+      try {
+        const j = await api("/board/layer", { slug: b.slug, token: b.token, op: "add", name, color, who: me.name, whoColor: me.color });
+        if (board !== b) return;
+        id = j.id;
+        b.shadow.set(id, { s: new Set(), c: new Set(), o: new Set() });
+      } catch (e) { toast(e.message || "Couldn't add a layer"); return; }
+    } else {
+      const used2 = new Set(layers.map((l) => l.id));
+      while (used2.has(id)) id++;
+    }
+    layers.push(mkLayer(id, name, color));
+    activeId = id; delArmed = 0;
+    renderEdit(); paint();
+    const f = $("#layName");
+    if (f) { f.focus(); f.select(); }
+  }
+  async function deleteLayer() {
+    if (layers.length < 2) return;
+    const L = curLayer();
+    if (!delArmed) { delArmed = setTimeout(() => { delArmed = 0; renderEdit(); }, 3500); renderEdit(); return; }
+    clearTimeout(delArmed); delArmed = 0;
+    if (board) {
+      const b = board;
+      try { await api("/board/layer", { slug: b.slug, token: b.token, op: "delete", id: L.id, who: me.name, whoColor: me.color }); }
+      catch (e) { toast(e.message || "Couldn't delete the layer"); renderEdit(); return; }
+      if (board !== b) return;
+      b.shadow.delete(L.id);
+      layers = layers.filter((x) => x.id !== L.id);
+    } else {
+      const before = snapshot();
+      layers = layers.filter((x) => x.id !== L.id);
+      toast(`Deleted ${L.name}`, "Undo", () => restore(before));
+    }
+    activeId = layers[0].id;
+    renderEdit(); paint();
+  }
+  chipsEl.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.addlay) addLayer(); else if (b.dataset.lay) setActive(Number(b.dataset.lay));
+  });
+  editEl.addEventListener("input", (e) => {
+    if (e.target.id !== "layName") return;
+    const L = curLayer();
+    L.name = e.target.value.replace(/[<>]/g, "").slice(0, 32) || "Layer";
+    renderChips(); save(); pushMeta(L);
+  });
+  editEl.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.color) { const L = curLayer(); L.color = b.dataset.color; renderEdit(); paint(); pushMeta(L); }
+    else if (b.dataset.dellay) deleteLayer();
+  });
+  function activateLayerIndex(i) { if (layers[i]) setActive(layers[i].id); }
+
+  /* ---------- import: paste names, FIPS codes or a CSV ---------- */
+  const normN = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  let lookup = null;
+  function buildLookup() {
+    const stName = new Map(), stAbbr = new Map(), counties = new Map();
+    for (const s of S.values()) { stName.set(normN(s.name), s.id); stAbbr.set(s.abbr.toLowerCase(), s.id); }
+    const add = (key, id) => { const a = counties.get(key); if (!a) counties.set(key, [id]); else if (!a.includes(id)) a.push(id); };
+    for (const c of C.values()) {
+      add(c.st + "|" + normN(c.full), c.id);
+      add(c.st + "|" + normN(c.name), c.id);
+      add(c.st + "|" + normN(c.name).replace(/ (county|parish|borough|census area|municipality|city and borough)$/, ""), c.id);
+    }
+    const byLen = [...stName.keys()].sort((a, b) => b.length - a.length);
+    lookup = { stName, stAbbr, counties, byLen };
+  }
+  function splitCells(line) {
+    const out = []; let cell = "", q = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (q) { if (ch === '"') { if (line[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === "," || ch === "\t" || ch === ";" || ch === "|") { out.push(cell); cell = ""; }
+      else cell += ch;
+    }
+    out.push(cell);
+    return out.map((x) => x.trim()).filter(Boolean);
+  }
+  const stateOf = (t) => { const n = normN(t); return lookup.stName.get(n) || (n.length === 2 ? lookup.stAbbr.get(n) : undefined); };
+  function findCounty(st, name) {
+    const n = normN(name);
+    let r = lookup.counties.get(st + "|" + n);
+    if (!r) r = lookup.counties.get(st + "|" + n.replace(/ (county|parish|borough|census area|municipality)$/, ""));
+    return r;
+  }
+  // one line -> { s } | { c } | { err }
+  function resolveLine(t, line) {
+    const five = t.find((x) => /^\d{5}$/.test(x)) || t.find((x) => /^\d{4}$/.test(x) && C.has("0" + x));
+    if (five) { const id = five.length === 4 ? "0" + five : five; return C.has(id) ? { c: id } : { err: "No county with that FIPS code" }; }
+    const two = t.length <= 6 && /^(state|county|origin)$/i.test(t[0]) ? t.find((x) => /^\d{2}$/.test(x)) : (t.length === 1 && /^\d{2}$/.test(t[0]) ? t[0] : null);
+    if (two) return S.has(two) ? { s: two } : { err: "No state with that FIPS code" };
+    let st = null, name = null;
+    if (t.length >= 2) {
+      const a = stateOf(t[1]), b2 = stateOf(t[0]);
+      if (a) { st = a; name = t[0]; } else if (b2 && t[1]) { st = b2; name = t[1]; }
+      if (!st) return { err: "Couldn't find the state" };
+    } else {
+      const only = t[0];
+      const whole = stateOf(only);
+      if (whole && !/county|parish/i.test(only)) return { s: whole };
+      const m = only.match(/^(.*\S)[\s,]+([A-Za-z]{2})$/);
+      if (m && lookup.stAbbr.has(m[2].toLowerCase())) { st = lookup.stAbbr.get(m[2].toLowerCase()); name = m[1]; }
+      else {
+        const nn = normN(only);
+        for (const sn of lookup.byLen) if (nn.endsWith(" " + sn)) { st = lookup.stName.get(sn); name = nn.slice(0, nn.length - sn.length - 1); break; }
+      }
+      if (!st) return { err: "Add a state, like “Cook County, IL”" };
+    }
+    if (/^whole state$/i.test(name) || normN(name) === normN(S.get(st).name)) return { s: st };
+    const found = findCounty(st, name);
+    if (!found) return { err: `No county called “${name}” in ${S.get(st).abbr}` };
+    if (found.length > 1) return { err: "More than one match. Add “county” or “city”" };
+    return { c: found[0] };
+  }
+  function parseImport(text) {
+    if (!lookup) buildLookup();
+    const res = { s: new Set(), c: new Set(), o: new Set(), bad: [] };
+    for (const raw of text.split(/\r?\n/)) {
+      let line = raw.trim();
+      if (!line || line[0] === "#" || line.startsWith("//")) continue;
+      let isOrigin = false;
+      const pre = line.match(/^origin\s*[:\-]\s*(.*)$/i);
+      if (pre) { isOrigin = true; line = pre[1]; }
+      const t = splitCells(line.replace(/\((whole state|state)\)/i, ""));
+      if (!t.length) continue;
+      if (/^type$/i.test(t[0]) && t.some((x) => /^fips$/i.test(x))) continue;
+      if (/^origin$/i.test(t[0]) && t.length > 1) isOrigin = true;
+      const r = resolveLine(t, line);
+      if (r.err) res.bad.push({ line: line.slice(0, 60), why: r.err });
+      else if (r.s) { if (isOrigin) res.bad.push({ line: line.slice(0, 60), why: "An origin has to be a county" }); else res.s.add(r.s); }
+      else { res.c.add(r.c); if (isOrigin) res.o.add(r.c); }
+    }
+    return res;
+  }
+  const importSheet = $("#importSheet"), importText = $("#importText"), importGo = $("#importGo");
+  let importParsed = null, importTimer = 0;
+  function renderImport() {
+    const text = importText.value;
+    const sum = $("#importSummary"), badEl = $("#importBad");
+    if (!text.trim()) { importParsed = null; sum.textContent = ""; badEl.innerHTML = ""; importGo.disabled = true; importGo.textContent = "Add to layer"; return; }
+    importParsed = parseImport(text);
+    const ns = [...importParsed.s].filter((id) => !sel.states.has(id)).length;
+    const nc = [...importParsed.c].filter((id) => !sel.counties.has(id)).length;
+    const no = [...importParsed.o].filter((id) => !sel.origins.has(id)).length;
+    const total = importParsed.s.size + importParsed.c.size;
+    const dup = total - ns - nc;
+    sum.textContent = `${total} recognized` + (importParsed.o.size ? `, ${importParsed.o.size} as origin` : "") + (dup ? `, ${dup} already in this layer` : "") + (importParsed.bad.length ? `, ${importParsed.bad.length} not recognized` : "") + ".";
+    badEl.innerHTML = importParsed.bad.slice(0, 6).map((b) => `<li><code>${esc(b.line)}</code> ${esc(b.why)}</li>`).join("") + (importParsed.bad.length > 6 ? `<li>and ${importParsed.bad.length - 6} more</li>` : "");
+    const n = ns + nc + no;
+    importGo.disabled = !n;
+    importGo.textContent = n ? `Add ${ns + nc} to ${curLayer().name}` : "Nothing new to add";
+  }
+  importText.addEventListener("input", () => { clearTimeout(importTimer); importTimer = setTimeout(renderImport, 150); });
+  $("#importFile").addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (f.size > 2e6) { toast("That file is too large. Keep it under 2 MB."); return; }
+    const fr = new FileReader();
+    fr.onload = () => { importText.value = String(fr.result).slice(0, 400000); renderImport(); };
+    fr.readAsText(f);
+    e.target.value = "";
+  });
+  $("#importBtn").addEventListener("click", () => {
+    importSheet.hidden = !importSheet.hidden;
+    if (!importSheet.hidden) { renderImport(); importText.focus(); }
+  });
+  $("#importCancel").addEventListener("click", () => { importSheet.hidden = true; importText.value = ""; renderImport(); });
+  importGo.addEventListener("click", () => {
+    if (!importParsed) return;
+    const before = snapshot();
+    let n = 0, minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+    const grow = (b) => { minx = Math.min(minx, b[0][0]); miny = Math.min(miny, b[0][1]); maxx = Math.max(maxx, b[1][0]); maxy = Math.max(maxy, b[1][1]); };
+    for (const id of importParsed.s) if (!sel.states.has(id)) { sel.states.add(id); n++; grow(S.get(id).b); }
+    for (const id of importParsed.c) { if (!sel.counties.has(id)) { sel.counties.add(id); n++; } grow(C.get(id).b); }
+    for (const id of importParsed.o) sel.origins.add(id);
+    commit();
+    if (minx < Infinity) zoomToBounds([[minx, miny], [maxx, maxy]], 30);
+    toast(`Imported ${n} ${n === 1 ? "item" : "items"} into ${curLayer().name}`, "Undo", () => restore(before));
+    importSheet.hidden = true; importText.value = ""; renderImport();
+  });
+
   /* ---------- boot ---------- */
   setMode(mode);
+  renderLayers();
+  renderBoardBox();
   new ResizeObserver(resize).observe(wrap);
   resize();
   paint();
+  handleRoute();
 })();
 </script>
 </body>

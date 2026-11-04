@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opening board</title>
+<script>
+  // GitHub Pages has no server routing. Send /name and /l/name to the app, which reads the path from ?p=.
+  (function () {
+    var parts = location.pathname.split("/");
+    var base = /github\.io$/.test(location.hostname) ? "/" + parts[1] + "/" : "/";
+    var rest = location.pathname.slice(base.length);
+    location.replace(base + "?p=/" + rest);
+  })();
+</script>
+</head>
+<body style="font-family: system-ui, sans-serif; padding: 2rem;">Opening…</body>
+</html>
