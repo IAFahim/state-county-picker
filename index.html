@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>State &amp; County Picker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Select US states and counties on a zoomable map and get a copyable list of everything you picked.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a full-bleed atlas map with floating instruments, and a ledger-style selection panel on the right (stacks under the map on phones). Palette: strict black and white. */
+:root {
+  --ground: #E4E4E4;      /* off-map */
+  --land: #FFFFFF;        /* unselected land */
+  --panel: #F5F5F5;
+  --raise: #FFFFFF;
+  --ink: #0A0A0A;
+  --ink-2: #4D4D4D;
+  --ink-3: #7A7A7A;
+  --rule: #DADADA;
+  --rule-strong: #BDBDBD;
+  --hover: rgba(0, 0, 0, .06);
+  --glass: rgba(245, 245, 245, .9);
+  --county-line: #C4C4C4;
+  --state-line: #4D4D4D;
+  --hl: #0A0A0A;         /* selected county */
+  --hl-soft: rgba(0, 0, 0, .16);
+  --hl-edge: #000000;
+  --hl-ink: #FFFFFF;
+  --danger: #0A0A0A;
+  --danger-soft: rgba(0, 0, 0, .08);
+  --focus: #000000;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .10), 0 6px 18px rgba(0, 0, 0, .12);
+
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --body: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #050505; --land: #1A1A1A; --panel: #0F0F0F; --raise: #161616;
+    --ink: #F2F2F2; --ink-2: #B0B0B0; --ink-3: #7C7C7C;
+    --rule: #262626; --rule-strong: #3A3A3A; --hover: rgba(255, 255, 255, .08); --glass: rgba(15, 15, 15, .88);
+    --county-line: #333333; --state-line: #9A9A9A;
+    --hl: #F2F2F2; --hl-soft: rgba(255, 255, 255, .20); --hl-edge: #FFFFFF; --hl-ink: #000000;
+    --danger: #F2F2F2; --danger-soft: rgba(255, 255, 255, .10); --focus: #FFFFFF;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .6), 0 8px 24px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #050505; --land: #1A1A1A; --panel: #0F0F0F; --raise: #161616;
+  --ink: #F2F2F2; --ink-2: #B0B0B0; --ink-3: #7C7C7C;
+  --rule: #262626; --rule-strong: #3A3A3A; --hover: rgba(255, 255, 255, .08); --glass: rgba(15, 15, 15, .88);
+  --county-line: #333333; --state-line: #9A9A9A;
+  --hl: #F2F2F2; --hl-soft: rgba(255, 255, 255, .20); --hl-edge: #FFFFFF; --hl-ink: #000000;
+  --danger: #F2F2F2; --danger-soft: rgba(255, 255, 255, .10); --focus: #FFFFFF;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .6), 0 8px 24px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 14px/1.45 var(--body);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 372px;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ---------- map ---------- */
+.map-wrap { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--ground); }
+#map { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+#map:active { cursor: grabbing; }
+.counties path { fill: var(--land); cursor: pointer; }
+.counties path.sel { fill: var(--hl); stroke: var(--hl-edge); stroke-width: .8px; vector-effect: non-scaling-stroke; }
+.whole path { fill: url(#hatch); pointer-events: none; }
+.whole-edge path { fill: none; stroke: var(--hl-edge); stroke-width: 1.8px; stroke-linejoin: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.hatch-bg { fill: var(--hl-soft); }
+.hatch-ln { stroke: var(--hl-edge); stroke-width: 1.5; stroke-opacity: .75; }
+.mesh { fill: none; pointer-events: none; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.county-mesh { stroke: var(--county-line); stroke-width: .6px; transition: opacity .2s; }
+.mode-state .county-mesh { opacity: .5; }
+.state-mesh { stroke: var(--state-line); stroke-width: 1.1px; }
+.coast { stroke: var(--state-line); stroke-width: 1.2px; }
+.hover { fill: none; stroke: var(--ink); stroke-width: 2.2px; stroke-linejoin: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+.lbl text {
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--land);
+  stroke-linejoin: round;
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-family: var(--display);
+}
+.lbl-states text { fill: var(--ink-2); font-weight: 600; letter-spacing: .14em; }
+.lbl-states text.on { fill: var(--ink); }
+.lbl-counties text { fill: var(--ink-2); font-weight: 500; letter-spacing: .02em; }
+.lbl-counties text.on { fill: var(--hl-ink); stroke: var(--hl); font-weight: 700; }
+
+.toolbar {
+  position: absolute;
+  top: 14px;
+  left: max(14px, env(safe-area-inset-left, 0px));
+  right: 64px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  pointer-events: none;
+}
+.toolbar > * { pointer-events: auto; }
+.seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--raise);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.seg-label {
+  padding: 0 8px 0 9px;
+  font: 600 10.5px/1 var(--body);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.seg button {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 11px;
+  border-radius: 7px;
+  font: 600 13px/1 var(--body);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.seg button:hover { background: var(--hover); color: var(--ink); }
+.seg button[aria-checked="true"] { background: var(--ink); color: var(--raise); }
+.seg button[aria-checked="true"] kbd { border-color: currentColor; }
+.seg button[aria-checked="true"] .sw { border-color: var(--raise); }
+.seg button[aria-checked="true"] .sw-county { background: var(--raise); }
+.seg button[aria-checked="true"] .sw-state { background-color: var(--raise); }
+kbd {
+  font: 500 10px/1 var(--mono);
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--rule-strong);
+  opacity: .75;
+}
+.hint {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.hint b { color: var(--ink); font-weight: 600; }
+
+.sw { display: inline-block; flex: none; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--hl-edge); }
+.sw-county { background: var(--hl); }
+.sw-state { background: repeating-linear-gradient(45deg, var(--hl-edge) 0 1.4px, var(--hl-soft) 1.4px 4px); background-color: var(--land); }
+
+.zoom-ctl {
+  position: absolute;
+  right: max(14px, env(safe-area-inset-right, 0px));
+  bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  background: var(--raise);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.zoom-ctl button { all: unset; width: 38px; height: 38px; display: grid; place-items: center; color: var(--ink); cursor: pointer; }
+.zoom-ctl button + button { border-top: 1px solid var(--rule); }
+.zoom-ctl button:hover { background: var(--hover); }
+.zoom-ctl svg { width: 16px; height: 16px; }
+
+.scale {
+  position: absolute;
+  right: calc(max(14px, env(safe-area-inset-right, 0px)) + 54px);
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  pointer-events: none;
+  font: 500 11px/1 var(--mono);
+  color: var(--ink-2);
+}
+.scale-bar { height: 7px; border: 1.5px solid var(--ink-2); border-top: 0; }
+.scale small { font: 400 10px/1 var(--body); color: var(--ink-3); }
+
+.tip {
+  position: absolute;
+  left: 0; top: 0;
+  z-index: 5;
+  max-width: 250px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--ink);
+  color: var(--raise);
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  line-height: 1.35;
+  pointer-events: none;
+}
+.tip b { display: block; font-size: 13.5px; font-weight: 600; }
+.tip span { display: block; opacity: .74; }
+.tip .tip-act { opacity: 1; margin-top: 3px; font-weight: 500; }
+
+.box { position: absolute; left: 0; top: 0; border: 1.5px dashed var(--ink); background: var(--hl-soft); pointer-events: none; }
+.box.rm { border-color: var(--danger); background: var(--danger-soft); }
+
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 140px);
+  padding: 9px 10px 9px 14px;
+  border-radius: 9px;
+  background: var(--ink);
+  color: var(--raise);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+}
+.toast button { all: unset; cursor: pointer; padding: 4px 9px; border-radius: 6px; font-weight: 700; color: var(--raise); text-decoration: underline; }
+.toast button:hover { background: var(--hover); }
+.map-error {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink-2);
+}
+
+/* ---------- panel ---------- */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--rule);
+}
+.pad {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.panel-head { display: grid; gap: 14px; padding-block: 18px 14px; }
+.title h1 {
+  margin: 0;
+  font: 700 22px/1.05 var(--display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+.title p { margin: 4px 0 0; font-size: 12px; color: var(--ink-3); }
+.totals { display: flex; gap: 26px; }
+.total { display: grid; gap: 4px; }
+.total b { font: 600 36px/1 var(--display); font-variant-numeric: tabular-nums; }
+.total span {
+  display: flex; align-items: center; gap: 6px;
+  font: 600 10.5px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2);
+}
+
+.search { padding-block: 0 10px; }
+.search-field { position: relative; }
+.search-field > svg { position: absolute; left: 11px; top: 12px; width: 16px; height: 16px; color: var(--ink-3); pointer-events: none; }
+#q {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px 0 34px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 8px;
+  background: var(--raise);
+  color: var(--ink);
+  font: 400 14px var(--body);
+}
+#q::placeholder { color: var(--ink-3); }
+#results {
+  position: absolute;
+  left: 0; right: 0; top: 44px;
+  z-index: 10;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: min(340px, 50vh);
+  overflow: auto;
+  background: var(--raise);
+  border: 1px solid var(--rule-strong);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+}
+#results li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#results li[aria-selected="true"] { background: var(--hover); }
+#results .r-main { display: grid; min-width: 0; flex: 1; }
+#results .r-main b { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#results .r-main small { font-size: 11.5px; color: var(--ink-3); }
+#results .r-on { font: 600 10.5px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+#results .r-empty { cursor: default; color: var(--ink-3); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 0 12px; border-bottom: 1px solid var(--rule); }
+.btn {
+  all: unset;
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 11px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 7px;
+  background: var(--raise);
+  color: var(--ink);
+  font: 600 12.5px/1 var(--body);
+  cursor: pointer;
+}
+.btn svg { width: 14px; height: 14px; }
+.btn:hover { background: var(--hover); }
+.btn[disabled] { opacity: .45; cursor: default; }
+.btn.quiet { margin-left: auto; border-color: transparent; background: transparent; color: var(--danger); }
+.btn.quiet:hover { background: var(--danger-soft); }
+
+.list { flex: 1; min-height: 0; overflow: auto; padding-block: 4px 24px; }
+.note {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  margin-top: 10px; padding: 9px 11px;
+  border: 1px dashed var(--rule-strong); border-radius: 8px;
+  font-size: 12.5px; color: var(--ink-2);
+}
+.note button { all: unset; cursor: pointer; font-weight: 600; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.grp { padding-block: 12px 10px; border-bottom: 1px solid var(--rule); }
+.grp-head { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+.grp-name {
+  all: unset;
+  display: inline-flex; align-items: baseline; gap: 7px;
+  min-width: 0;
+  cursor: pointer;
+  font: 700 16px/1.15 var(--display);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.grp-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+.grp-name .ab { font: 500 11px/1 var(--mono); letter-spacing: 0; color: var(--ink-3); }
+.grp-meta { flex: 1; min-width: 0; font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.chip {
+  all: unset;
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  height: 24px; padding: 0 9px;
+  border: 1px dashed var(--rule-strong);
+  border-radius: 999px;
+  font: 600 11.5px/1 var(--body);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.chip:hover { color: var(--ink); border-color: var(--ink-3); }
+.chip.on { border: 1px solid var(--hl-edge); background: var(--hl-soft); color: var(--ink); }
+.chip .sw { width: 10px; height: 10px; }
+.x {
+  all: unset;
+  display: grid; place-items: center; flex: none;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+.x svg { width: 12px; height: 12px; }
+.x:hover { color: var(--danger); background: var(--danger-soft); }
+.rows { list-style: none; margin: 6px 0 0; padding: 0; display: grid; }
+.row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto 28px;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  margin-inline: -6px;
+  padding-inline: 6px;
+  border-radius: 6px;
+}
+.row:hover { background: var(--hover); }
+.row-name { all: unset; min-width: 0; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; }
+.row-name:hover { text-decoration: underline; text-underline-offset: 2px; }
+.fips { font: 400 11.5px/1 var(--mono); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.empty { padding-block: 26px; display: grid; gap: 8px; color: var(--ink-2); max-width: 34ch; }
+.empty b { color: var(--ink); font-size: 14.5px; }
+.empty p { margin: 0; font-size: 13px; }
+
+.copy-sheet { display: grid; gap: 10px; padding-block: 12px; border-bottom: 1px solid var(--rule); }
+.copy-sheet p { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+.copy-sheet textarea {
+  width: 100%; min-height: 140px; resize: vertical;
+  padding: 8px 10px; border: 1px solid var(--rule-strong); border-radius: 8px;
+  background: var(--raise); color: var(--ink); font: 400 12px/1.5 var(--mono);
+}
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 57fr) minmax(0, 43fr); }
+  .panel { border-left: 0; border-top: 1px solid var(--rule); }
+  .panel-head { grid-template-columns: minmax(0, 1fr) auto; align-items: end; padding-block: 12px 10px; gap: 10px; }
+  .title h1 { font-size: 18px; }
+  .title p { display: none; }
+  .totals { gap: 16px; }
+  .total b { font-size: 26px; }
+  .seg-label { display: none; }
+  .toast { max-width: calc(100% - 28px); bottom: 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .county-mesh { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <main class="map-wrap" id="mapWrap">
+    <svg id="map" role="img" aria-label="Map of US states and counties. Click to select."></svg>
+
+    <div class="toolbar" id="toolbar">
+      <div class="seg" role="radiogroup" aria-label="What a click selects">
+        <span class="seg-label">Select</span>
+        <button type="button" role="radio" aria-checked="false" data-mode="state" id="modeState"><span class="sw sw-state" aria-hidden="true"></span>States <kbd>S</kbd></button>
+        <button type="button" role="radio" aria-checked="true" data-mode="county" id="modeCounty"><span class="sw sw-county" aria-hidden="true"></span>Counties <kbd>C</kbd></button>
+      </div>
+      <p class="hint" id="hint"></p>
+    </div>
+
+    <div class="scale" id="scale" title="Approximate distance in the lower 48. The Alaska inset is drawn at about one third scale.">
+      <span id="scaleLabel">200 mi</span>
+      <div class="scale-bar" id="scaleBar" style="width:90px"></div>
+    </div>
+
+    <div class="zoom-ctl" role="group" aria-label="Zoom">
+      <button type="button" id="zoomIn" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
+      <button type="button" id="zoomOut" aria-label="Zoom out" title="Zoom out (−)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 8h10"/></svg></button>
+      <button type="button" id="zoomHome" aria-label="Show the whole country" title="Whole country (0)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button>
+    </div>
+
+    <div class="tip" id="tip" hidden></div>
+    <div class="box" id="box" hidden></div>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button type="button" id="toastAction" hidden>Undo</button></div>
+  </main>
+
+  <aside class="panel" aria-label="Your selection">
+    <header class="panel-head pad">
+      <div class="title">
+        <h1>State &amp; County Picker</h1>
+        <p>50 states, DC and 3,142 counties or county equivalents</p>
+      </div>
+      <div class="totals" aria-live="polite">
+        <div class="total"><b id="nStates">0</b><span><i class="sw sw-state" aria-hidden="true"></i>States</span></div>
+        <div class="total"><b id="nCounties">0</b><span><i class="sw sw-county" aria-hidden="true"></i>Counties</span></div>
+      </div>
+    </header>
+
+    <div class="search pad">
+      <div class="search-field">
+        <label for="q" class="sr-only">Find a state or county</label>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>
+        <input id="q" type="search" placeholder="Find a state or county  ( / )" autocomplete="off" spellcheck="false"
+               role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list">
+        <ul id="results" role="listbox" aria-label="Matching places" hidden></ul>
+      </div>
+    </div>
+
+    <div class="actions pad">
+      <button type="button" class="btn" id="copyList"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5"/><path d="M10.5 5V3.5A1.5 1.5 0 0 0 9 2H3.5A1.5 1.5 0 0 0 2 3.5V9a1.5 1.5 0 0 0 1.5 1.5H5"/></svg>Copy list</button>
+      <button type="button" class="btn" id="copyCsv">Copy CSV</button>
+      <button type="button" class="btn quiet" id="clearAll">Clear all</button>
+    </div>
+
+    <div class="copy-sheet pad" id="copySheet" hidden>
+      <p id="copySheetMsg">Copying was blocked here. The text below is selected, so press Ctrl+C (⌘C on a Mac) to copy it.</p>
+      <label for="copyText" class="sr-only">Text to copy</label>
+      <textarea id="copyText" readonly></textarea>
+      <div><button type="button" class="btn" id="copyDone">Done</button></div>
+    </div>
+
+    <div class="list pad" id="list"></div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script src="counties.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const wrap = $("#mapWrap");
+
+  if (!window.d3 || !window.topojson || !window.US_ATLAS) {
+    wrap.insertAdjacentHTML("beforeend", '<div class="map-error"><p><b>The map could not load.</b><br>Check your internet connection, then reload the page.</p></div>');
+    return;
+  }
+
+  /* ---------- reference data ---------- */
+  const STATES = {
+    "01": ["Alabama", "AL"], "02": ["Alaska", "AK"], "04": ["Arizona", "AZ"], "05": ["Arkansas", "AR"], "06": ["California", "CA"],
+    "08": ["Colorado", "CO"], "09": ["Connecticut", "CT"], "10": ["Delaware", "DE"], "11": ["District of Columbia", "DC"],
+    "12": ["Florida", "FL"], "13": ["Georgia", "GA"], "15": ["Hawaii", "HI"], "16": ["Idaho", "ID"], "17": ["Illinois", "IL"],
+    "18": ["Indiana", "IN"], "19": ["Iowa", "IA"], "20": ["Kansas", "KS"], "21": ["Kentucky", "KY"], "22": ["Louisiana", "LA"],
+    "23": ["Maine", "ME"], "24": ["Maryland", "MD"], "25": ["Massachusetts", "MA"], "26": ["Michigan", "MI"], "27": ["Minnesota", "MN"],
+    "28": ["Mississippi", "MS"], "29": ["Missouri", "MO"], "30": ["Montana", "MT"], "31": ["Nebraska", "NE"], "32": ["Nevada", "NV"],
+    "33": ["New Hampshire", "NH"], "34": ["New Jersey", "NJ"], "35": ["New Mexico", "NM"], "36": ["New York", "NY"],
+    "37": ["North Carolina", "NC"], "38": ["North Dakota", "ND"], "39": ["Ohio", "OH"], "40": ["Oklahoma", "OK"], "41": ["Oregon", "OR"],
+    "42": ["Pennsylvania", "PA"], "44": ["Rhode Island", "RI"], "45": ["South Carolina", "SC"], "46": ["South Dakota", "SD"],
+    "47": ["Tennessee", "TN"], "48": ["Texas", "TX"], "49": ["Utah", "UT"], "50": ["Vermont", "VT"], "51": ["Virginia", "VA"],
+    "53": ["Washington", "WA"], "54": ["West Virginia", "WV"], "55": ["Wisconsin", "WI"], "56": ["Wyoming", "WY"]
+  };
+  // Alaska has boroughs, census areas, and a few cities-and-boroughs instead of counties.
+  const AK = {
+    "02013": "Borough", "02016": "Census Area", "02020": "Municipality", "02050": "Census Area", "02060": "Borough",
+    "02068": "Borough", "02070": "Census Area", "02090": "Borough", "02100": "Borough", "02105": "Census Area",
+    "02110": "City and Borough", "02122": "Borough", "02130": "Borough", "02150": "Borough", "02158": "Census Area",
+    "02164": "Borough", "02170": "Borough", "02180": "Census Area", "02185": "Borough", "02188": "Borough",
+    "02195": "Borough", "02198": "Census Area", "02220": "City and Borough", "02230": "Municipality", "02240": "Census Area",
+    "02261": "Census Area", "02275": "City and Borough", "02282": "City and Borough", "02290": "Census Area"
+  };
+  function countyType(id) {
+    const st = id.slice(0, 2), n = +id.slice(2);
+    if (st === "02") return AK[id] || "";
+    if (st === "22") return "Parish";
+    if (id === "11001" || id === "32510") return "";            // District of Columbia, Carson City
+    if ((st === "51" && n >= 500) || id === "24510" || id === "29510") return "city"; // independent cities
+    return "County";
+  }
+
+  const EXAMPLE = {
+    states: [],
+    counties: ["06001", "06013", "06041", "06055", "06075", "06081", "06085", "06095", "06097", "17031", "48201"]
+  };
+  const LS_KEY = "state-county-picker:v2";
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const coarse = matchMedia("(pointer: coarse)").matches;
+  const MI_PER_UNIT = (6371.0088 / 1300) * 0.621371; // us-atlas Albers USA scale 1300
+  const FRAME = [[-58, 12], [958, 607]];
+
+  /* ---------- geometry ---------- */
+  const topo = window.US_ATLAS;
+  const path = d3.geoPath();
+  const countyFeatures = topojson.feature(topo, topo.objects.counties).features;
+  const stateFeatures = topojson.feature(topo, topo.objects.states).features;
+
+  function labelPoint(f) {
+    const g = f.geometry;
+    if (g.type !== "MultiPolygon") return path.centroid(f);
+    let best = null, bestA = -1;
+    for (const coords of g.coordinates) {
+      const poly = { type: "Polygon", coordinates: coords };
+      const a = path.area(poly);
+      if (a > bestA) { bestA = a; best = poly; }
+    }
+    return path.centroid(best);
+  }
+
+  const S = new Map(), C = new Map();
+  for (const f of stateFeatures) {
+    const [name, abbr] = STATES[f.id] || [f.properties.name, f.id];
+    S.set(f.id, { id: f.id, name, abbr, f, lp: labelPoint(f), b: path.bounds(f), counties: [], d: null });
+  }
+  for (const f of countyFeatures) {
+    const st = f.id.slice(0, 2), s = S.get(st);
+    if (!s) continue;
+    const type = countyType(f.id), name = f.properties.name;
+    const c = { id: f.id, st, name, full: type ? name + " " + type : name, f, lp: labelPoint(f), b: path.bounds(f) };
+    C.set(f.id, c);
+    s.counties.push(c);
+  }
+  const byName = (a, b) => a.name.localeCompare(b.name) || a.full.localeCompare(b.full);
+  for (const s of S.values()) s.counties.sort(byName);
+  const stateD = (s) => s.d || (s.d = path(s.f));
+
+  /* ---------- selection state ---------- */
+  const sel = { states: new Set(), counties: new Set() };
+  let mode = "county";
+  let isExample = false;
+
+  (function load() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const o = JSON.parse(raw);
+        (o.states || []).forEach((id) => S.has(id) && sel.states.add(id));
+        (o.counties || []).forEach((id) => C.has(id) && sel.counties.add(id));
+        if (o.mode === "county") mode = "county";
+        isExample = !!o.example;
+        return;
+      }
+    } catch (e) { /* storage unavailable: fall through to the example */ }
+    EXAMPLE.states.forEach((id) => sel.states.add(id));
+    EXAMPLE.counties.forEach((id) => sel.counties.add(id));
+    isExample = true;
+  })();
+
+  function save() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ states: [...sel.states], counties: [...sel.counties], mode, example: isExample }));
+    } catch (e) { /* not saved; the page still works */ }
+  }
+  const snapshot = () => ({ s: [...sel.states], c: [...sel.counties], ex: isExample });
+  function restore(snap) {
+    sel.states = new Set(snap.s); sel.counties = new Set(snap.c); isExample = snap.ex;
+    paint();
+  }
+  function commit() { isExample = false; paint(); }
+  function toggle(kind, id) {
+    const set = kind === "s" ? sel.states : sel.counties;
+    set.has(id) ? set.delete(id) : set.add(id);
+    commit();
+    return set.has(id);
+  }
+
+  /* ---------- map ---------- */
+  const svg = d3.select("#map");
+  const defs = svg.append("defs");
+  const pat = defs.append("pattern").attr("id", "hatch").attr("patternUnits", "userSpaceOnUse").attr("width", 6).attr("height", 6);
+  pat.append("rect").attr("class", "hatch-bg").attr("width", 6).attr("height", 6);
+  pat.append("line").attr("class", "hatch-ln").attr("x1", 3).attr("y1", -1).attr("x2", 3).attr("y2", 7);
+
+  const g = svg.append("g").attr("class", "world");
+  const gCounties = g.append("g").attr("class", "counties");
+  const countyPaths = gCounties.selectAll("path").data(countyFeatures).join("path").attr("d", path);
+  const gWhole = g.append("g").attr("class", "whole");
+  g.append("path").attr("class", "mesh county-mesh")
+    .attr("d", path(topojson.mesh(topo, topo.objects.counties, (a, b) => a !== b && a.id.slice(0, 2) === b.id.slice(0, 2))));
+  g.append("path").attr("class", "mesh state-mesh").attr("d", path(topojson.mesh(topo, topo.objects.states, (a, b) => a !== b)));
+  g.append("path").attr("class", "mesh coast").attr("d", path(topojson.mesh(topo, topo.objects.states, (a, b) => a === b)));
+  const gWholeEdge = g.append("g").attr("class", "whole-edge");
+  const hoverPath = g.append("path").attr("class", "hover");
+  const gStateLbl = g.append("g").attr("class", "lbl lbl-states");
+  const gCountyLbl = g.append("g").attr("class", "lbl lbl-counties");
+
+  let vw = 0, vh = 0, base = d3.zoomIdentity, cur = d3.zoomIdentity, atHome = true, panning = false, ready = false;
+  const toolbarEl = $("#toolbar");
+  const PAD = () => ({ t: toolbarEl.offsetHeight + 26, r: 18, b: 18, l: 18 });
+
+  const zoom = d3.zoom()
+    .filter((e) => (!e.ctrlKey || e.type === "wheel") && !e.button && !(e.type !== "wheel" && (e.shiftKey || e.altKey)))
+    .on("start", (e) => {
+      const t = e.sourceEvent && e.sourceEvent.type;
+      if (t && t !== "wheel") { panning = true; hideTip(); }
+    })
+    .on("zoom", zoomed)
+    .on("end", () => { panning = false; labelsNow(); });
+  svg.call(zoom);
+
+  function zoomed(e) {
+    cur = e.transform;
+    g.attr("transform", cur);
+    pat.attr("patternTransform", `scale(${1 / cur.k}) rotate(45)`);
+    gStateLbl.attr("font-size", 12 / cur.k).attr("stroke-width", 3 / cur.k);
+    gCountyLbl.attr("font-size", 11.5 / cur.k).attr("stroke-width", 3 / cur.k);
+    atHome = Math.abs(cur.k - base.k) < 1e-6 && Math.abs(cur.x - base.x) < 0.5 && Math.abs(cur.y - base.y) < 0.5;
+    updateScale();
+    labelsSoon();
+  }
+
+  function fitTransform() {
+    const p = PAD(), [[x0, y0], [x1, y1]] = FRAME;
+    const aw = Math.max(60, vw - p.l - p.r), ah = Math.max(60, vh - p.t - p.b);
+    const k = Math.min(aw / (x1 - x0), ah / (y1 - y0));
+    return d3.zoomIdentity
+      .translate(p.l + (aw - k * (x1 - x0)) / 2 - k * x0, p.t + (ah - k * (y1 - y0)) / 2 - k * y0)
+      .scale(k);
+  }
+
+  function resize() {
+    const r = wrap.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const goHome = atHome || !ready;
+    vw = r.width; vh = r.height;
+    svg.attr("width", vw).attr("height", vh);
+    base = fitTransform();
+    zoom.extent([[0, 0], [vw, vh]])
+      .scaleExtent([base.k * 0.8, base.k * 120])
+      .translateExtent([[-700, -500], [1675, 1110]]);
+    if (goHome) svg.call(zoom.transform, base);
+    else labelsSoon();
+    ready = true;
+  }
+
+  function animate(sel) { return reduceMotion ? sel : sel.transition().duration(650).ease(d3.easeCubicInOut); }
+  function goHome() { animate(svg).call(zoom.transform, base); }
+  function zoomBy(f) { (reduceMotion ? svg : svg.transition().duration(220)).call(zoom.scaleBy, f); }
+  function zoomToBounds(b, maxRel = 30) {
+    const p = PAD(), [[x0, y0], [x1, y1]] = b;
+    const aw = vw - p.l - p.r, ah = vh - p.t - p.b;
+    let k = 0.82 * Math.min(aw / Math.max(x1 - x0, 0.05), ah / Math.max(y1 - y0, 0.05));
+    k = Math.max(base.k, Math.min(base.k * maxRel, k));
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    animate(svg).call(zoom.transform, d3.zoomIdentity.translate(p.l + aw / 2 - k * cx, p.t + ah / 2 - k * cy).scale(k));
+  }
+
+  /* scale bar */
+  const scaleBar = $("#scaleBar"), scaleLabel = $("#scaleLabel");
+  const STEPS = [0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
+  function updateScale() {
+    const miPerPx = MI_PER_UNIT / cur.k, target = 96 * miPerPx;
+    let d = STEPS[0];
+    for (const s of STEPS) if (s <= target) d = s;
+    scaleBar.style.width = (d / miPerPx).toFixed(1) + "px";
+    scaleLabel.textContent = d + " mi";
+  }
+
+  /* labels: shown only where the name fits inside the shape at the current zoom */
+  let lblRaf = 0;
+  function labelsSoon() { if (!lblRaf) lblRaf = requestAnimationFrame(() => { lblRaf = 0; labelsNow(); }); }
+  function labelsNow() {
+    if (!vw) return;
+    const k = cur.k, rel = k / base.k;
+    const [vx0, vy0] = cur.invert([0, 0]), [vx1, vy1] = cur.invert([vw, vh]);
+    const inView = (p) => p[0] > vx0 && p[0] < vx1 && p[1] > vy0 && p[1] < vy1;
+
+    const st = [], shown = new Map();
+    for (const s of S.values()) {
+      if (!inView(s.lp)) continue;
+      const bw = (s.b[1][0] - s.b[0][0]) * k, bh = (s.b[1][1] - s.b[0][1]) * k;
+      let text = null;
+      if (bw > s.name.length * 8.2 + 12 && bh > 24) text = s.name.toUpperCase();
+      else if (bw > 34 && bh > 20) text = s.abbr;
+      if (!text) continue;
+      const item = { key: "s" + s.id, x: s.lp[0], y: s.lp[1], text, on: sel.states.has(s.id), hw: text.length * 4.1 + 6 };
+      st.push(item);
+      shown.set(s.id, item);
+    }
+
+    const ct = [];
+    if (rel > 1.4) {
+      for (const c of C.values()) {
+        if (!inView(c.lp)) continue;
+        const bw = (c.b[1][0] - c.b[0][0]) * k, bh = (c.b[1][1] - c.b[0][1]) * k;
+        if (bh < 18 || bw < c.name.length * 5.4 + 10) continue;
+        const sl = shown.get(c.st);
+        if (sl && Math.abs((c.lp[1] - sl.y) * k) < 16 && Math.abs((c.lp[0] - sl.x) * k) < sl.hw + c.name.length * 2.7 + 4) continue;
+        ct.push({ key: c.id, x: c.lp[0], y: c.lp[1], text: c.name, on: sel.counties.has(c.id) });
+        if (ct.length >= 900) break;
+      }
+    }
+    joinLabels(gStateLbl, st);
+    joinLabels(gCountyLbl, ct);
+  }
+  function joinLabels(group, data) {
+    group.selectAll("text").data(data, (d) => d.key)
+      .join((en) => en.append("text").attr("x", (d) => d.x).attr("y", (d) => d.y))
+      .text((d) => d.text)
+      .classed("on", (d) => d.on);
+  }
+
+  /* hover + tooltip */
+  const tipEl = $("#tip");
+  let hoverKey = null, tipFor = null, lastPointer = "mouse";
+  function showHover(kind, id) {
+    const key = kind + id;
+    if (key === hoverKey) return;
+    hoverKey = key;
+    hoverPath.attr("d", kind === "s" ? stateD(S.get(id)) : path(C.get(id).f));
+  }
+  function clearHover() { hoverKey = null; hoverPath.attr("d", null); }
+  function tipHTML(kind, id) {
+    if (kind === "s") {
+      const s = S.get(id), on = sel.states.has(id);
+      return `<b>${esc(s.name)}</b><span>${s.counties.length} ${s.counties.length === 1 ? "county" : "counties"}</span>` +
+        `<span class="tip-act">${on ? "Selected. Click to remove." : "Click to select the whole state"}</span>`;
+    }
+    const c = C.get(id), on = sel.counties.has(id);
+    return `<b>${esc(c.full)}</b><span>${esc(S.get(c.st).name)} · FIPS ${c.id}</span>` +
+      `<span class="tip-act">${on ? "Selected. Click to remove." : "Click to select"}</span>`;
+  }
+  function showTip(kind, id, e) {
+    if (!tipFor || tipFor.kind !== kind || tipFor.id !== id) {
+      tipFor = { kind, id };
+      tipEl.innerHTML = tipHTML(kind, id);
+    }
+    tipEl.hidden = false;
+    const r = wrap.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    let x = e.clientX - r.left + 14, y = e.clientY - r.top + 18;
+    if (x + w > vw - 8) x = e.clientX - r.left - w - 14;
+    if (y + h > vh - 8) y = e.clientY - r.top - h - 12;
+    tipEl.style.transform = `translate(${Math.max(6, x)}px, ${Math.max(6, y)}px)`;
+  }
+  function refreshTip() { if (tipFor && !tipEl.hidden) tipEl.innerHTML = tipHTML(tipFor.kind, tipFor.id); }
+  function hideTip() { tipEl.hidden = true; tipFor = null; }
+
+  svg.on("pointerdown.track", (e) => { lastPointer = e.pointerType || "mouse"; });
+  gCounties
+    .on("pointermove", (e) => {
+      if (e.pointerType === "touch" || panning || box) return;
+      const d = e.target.__data__, c = d && C.get(d.id);
+      if (!c) return;
+      if (mode === "state") { showHover("s", c.st); showTip("s", c.st, e); }
+      else { showHover("c", c.id); showTip("c", c.id, e); }
+    })
+    .on("pointerleave", () => { clearHover(); hideTip(); })
+    .on("click", (e) => {
+      if (suppressClick) return;
+      const d = e.target.__data__, c = d && C.get(d.id);
+      if (!c) return;
+      const kind = mode === "state" ? "s" : "c", id = kind === "s" ? c.st : c.id;
+      const on = toggle(kind, id);
+      if (lastPointer === "touch") {
+        const label = kind === "s" ? S.get(id).name : `${c.full}, ${S.get(c.st).abbr}`;
+        toast(`${on ? "Selected" : "Removed"} ${label}`);
+      }
+    });
+
+  /* box select: Shift-drag adds, Alt-drag removes */
+  const boxEl = $("#box");
+  let box = null, suppressClick = false;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  svg.on("pointerdown.box", (e) => {
+    if (e.button !== 0 || !(e.shiftKey || e.altKey) || e.pointerType === "touch") return;
+    e.preventDefault();
+    const r = wrap.getBoundingClientRect();
+    box = { r, x0: e.clientX - r.left, y0: e.clientY - r.top, remove: e.altKey, moved: false };
+    box.x1 = box.x0; box.y1 = box.y0;
+    window.addEventListener("pointermove", boxMove);
+    window.addEventListener("pointerup", boxEnd);
+    window.addEventListener("pointercancel", boxEnd);
+  });
+  function boxMove(e) {
+    if (!box) return;
+    box.x1 = clamp(e.clientX - box.r.left, 0, vw);
+    box.y1 = clamp(e.clientY - box.r.top, 0, vh);
+    if (!box.moved && Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 4) {
+      box.moved = true;
+      boxEl.classList.toggle("rm", box.remove);
+      boxEl.hidden = false;
+      hideTip(); clearHover();
+    }
+    if (box.moved) {
+      const x = Math.min(box.x0, box.x1), y = Math.min(box.y0, box.y1);
+      boxEl.style.transform = `translate(${x}px, ${y}px)`;
+      boxEl.style.width = Math.abs(box.x1 - box.x0) + "px";
+      boxEl.style.height = Math.abs(box.y1 - box.y0) + "px";
+    }
+  }
+  function boxEnd(e) {
+    window.removeEventListener("pointermove", boxMove);
+    window.removeEventListener("pointerup", boxEnd);
+    window.removeEventListener("pointercancel", boxEnd);
+    const b = box;
+    box = null;
+    boxEl.hidden = true;
+    if (!b || !b.moved || e.type === "pointercancel") return;
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 0);
+
+    const [mx0, my0] = cur.invert([Math.min(b.x0, b.x1), Math.min(b.y0, b.y1)]);
+    const [mx1, my1] = cur.invert([Math.max(b.x0, b.x1), Math.max(b.y0, b.y1)]);
+    const inside = (p) => p[0] >= mx0 && p[0] <= mx1 && p[1] >= my0 && p[1] <= my1;
+    const isState = mode === "state", set = isState ? sel.states : sel.counties;
+    const before = snapshot();
+    let n = 0;
+    for (const it of (isState ? S.values() : C.values())) {
+      if (!inside(it.lp)) continue;
+      if (b.remove) { if (set.delete(it.id)) n++; }
+      else if (!set.has(it.id)) { set.add(it.id); n++; }
+    }
+    const noun = isState ? (n === 1 ? "state" : "states") : (n === 1 ? "county" : "counties");
+    if (n) {
+      commit();
+      toast(`${b.remove ? "Removed" : "Added"} ${n} ${noun}`, "Undo", () => restore(before));
+    } else {
+      toast(b.remove ? `No selected ${isState ? "states" : "counties"} have their center in that box` : `No new ${isState ? "states" : "counties"} have their center in that box`);
+    }
+  }
+
+  /* ---------- mode ---------- */
+  const hintEl = $("#hint");
+  function setMode(m) {
+    mode = m;
+    svg.classed("mode-state", m === "state").classed("mode-county", m === "county");
+    $("#modeState").setAttribute("aria-checked", String(m === "state"));
+    $("#modeCounty").setAttribute("aria-checked", String(m === "county"));
+    const what = m === "state" ? "a state" : "a county";
+    hintEl.innerHTML = coarse
+      ? `<b>Tap ${what}</b> to select it. Pinch to zoom.`
+      : `<b>Click ${what}</b> to select it. Scroll to zoom, drag to pan. <b>Shift-drag</b> selects an area, <b>Alt-drag</b> removes.`;
+    clearHover(); hideTip();
+    save();
+  }
+  $("#modeState").addEventListener("click", () => setMode("state"));
+  $("#modeCounty").addEventListener("click", () => setMode("county"));
+  $("#zoomIn").addEventListener("click", () => zoomBy(1.7));
+  $("#zoomOut").addEventListener("click", () => zoomBy(1 / 1.7));
+  $("#zoomHome").addEventListener("click", goHome);
+
+  /* ---------- panel ---------- */
+  const listEl = $("#list");
+  const X_ICON = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg>';
+
+  function groups() {
+    const m = new Map();
+    const get = (st) => { let gr = m.get(st); if (!gr) m.set(st, gr = { s: S.get(st), whole: false, counties: [] }); return gr; };
+    for (const id of sel.states) get(id).whole = true;
+    for (const id of sel.counties) get(id.slice(0, 2)).counties.push(C.get(id));
+    const arr = [...m.values()].sort((a, b) => a.s.name.localeCompare(b.s.name));
+    for (const gr of arr) gr.counties.sort(byName);
+    return arr;
+  }
+
+  function renderList() {
+    const gs = groups();
+    const active = document.activeElement;
+    const hadFocus = listEl.contains(active);
+    const focusIdx = hadFocus ? [...listEl.querySelectorAll("button")].indexOf(active) : -1;
+
+    let html = "";
+    if (isExample && gs.length) {
+      html += '<div class="note"><span>This is an example selection so you can see how the list works.</span><button type="button" data-clear="1">Clear it and start</button></div>';
+    }
+    if (!gs.length) {
+      html += '<div class="empty"><b>Nothing selected yet</b>' +
+        '<p>Click a state on the map to select it. To pick single counties, switch the map to <b>Counties</b> and zoom in.</p>' +
+        '<p>You can also type a name in the search box above.</p></div>';
+    }
+    for (const gr of gs) {
+      const s = gr.s, total = s.counties.length, n = gr.counties.length;
+      const meta = n ? `${n} of ${total} ${total === 1 ? "county" : "counties"}` : `${total} ${total === 1 ? "county" : "counties"}`;
+      html += `<section class="grp"><div class="grp-head" data-hl="s${s.id}">` +
+        `<button type="button" class="grp-name" data-zoom-state="${s.id}" title="Zoom to ${esc(s.name)}">${esc(s.name)} <span class="ab">${s.abbr}</span></button>` +
+        `<span class="grp-meta">${meta}</span>` +
+        `<button type="button" class="chip${gr.whole ? " on" : ""}" data-whole="${s.id}" aria-pressed="${gr.whole}" title="${gr.whole ? "Remove the whole-state selection" : "Also select all of " + esc(s.name)}">` +
+        (gr.whole ? '<span class="sw sw-state" aria-hidden="true"></span>Whole state' : "+ Whole state") + `</button>` +
+        `<button type="button" class="x" data-rm-group="${s.id}" aria-label="Remove ${esc(s.name)} and its counties from the selection" title="Remove ${esc(s.name)} and its counties">${X_ICON}</button>` +
+        `</div>`;
+      if (n) {
+        html += '<ul class="rows">';
+        for (const c of gr.counties) {
+          html += `<li class="row" data-hl="c${c.id}"><span class="sw sw-county" aria-hidden="true"></span>` +
+            `<button type="button" class="row-name" data-zoom-county="${c.id}" title="Zoom to ${esc(c.full)}">${esc(c.full)}</button>` +
+            `<span class="fips">${c.id}</span>` +
+            `<button type="button" class="x" data-rm-county="${c.id}" aria-label="Remove ${esc(c.full)}">${X_ICON}</button></li>`;
+        }
+        html += "</ul>";
+      }
+      html += "</section>";
+    }
+    listEl.innerHTML = html;
+
+    if (focusIdx >= 0) {
+      const btns = listEl.querySelectorAll("button");
+      if (btns.length) btns[Math.min(focusIdx, btns.length - 1)].focus({ preventScroll: true });
+    }
+  }
+
+  function renderTotals() {
+    $("#nStates").textContent = sel.states.size;
+    $("#nCounties").textContent = sel.counties.size.toLocaleString();
+    const empty = !sel.states.size && !sel.counties.size;
+    $("#copyList").disabled = empty;
+    $("#copyCsv").disabled = empty;
+    $("#clearAll").disabled = empty;
+  }
+
+  function paint() {
+    countyPaths.classed("sel", (d) => sel.counties.has(d.id));
+    const whole = [...sel.states].map((id) => S.get(id));
+    gWhole.selectAll("path").data(whole, (d) => d.id).join((en) => en.append("path").attr("d", stateD));
+    gWholeEdge.selectAll("path").data(whole, (d) => d.id).join((en) => en.append("path").attr("d", stateD));
+    labelsNow();
+    renderList();
+    renderTotals();
+    refreshTip();
+    save();
+  }
+
+  function removeGroup(st) {
+    const before = snapshot();
+    sel.states.delete(st);
+    for (const id of [...sel.counties]) if (id.slice(0, 2) === st) sel.counties.delete(id);
+    commit();
+    toast(`Removed ${S.get(st).name}`, "Undo", () => restore(before));
+  }
+  function clearAll() {
+    const n = sel.states.size + sel.counties.size;
+    if (!n) return;
+    const before = snapshot();
+    sel.states.clear(); sel.counties.clear();
+    commit();
+    toast(`Cleared ${n} ${n === 1 ? "item" : "items"}`, "Undo", () => restore(before));
+  }
+
+  listEl.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    const d = b.dataset;
+    if (d.zoomState) zoomToBounds(S.get(d.zoomState).b, 12);
+    else if (d.zoomCounty) zoomToBounds(C.get(d.zoomCounty).b);
+    else if (d.whole) toggle("s", d.whole);
+    else if (d.rmCounty) { sel.counties.delete(d.rmCounty); commit(); }
+    else if (d.rmGroup) removeGroup(d.rmGroup);
+    else if (d.clear) clearAll();
+  });
+  listEl.addEventListener("pointerover", (e) => {
+    const h = e.target.closest("[data-hl]");
+    if (!h) return;
+    const k = h.dataset.hl;
+    showHover(k[0], k.slice(1));
+  });
+  listEl.addEventListener("pointerleave", clearHover);
+  $("#clearAll").addEventListener("click", clearAll);
+
+  /* copy */
+  function textList() {
+    const out = [];
+    for (const gr of groups()) {
+      if (gr.whole) out.push(`${gr.s.name} (whole state)`);
+      for (const c of gr.counties) out.push(`${c.full}, ${gr.s.abbr}`);
+    }
+    return out.join("\n");
+  }
+  function textCSV() {
+    const cell = (v) => (/[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v));
+    const rows = [["type", "name", "state", "state_abbr", "fips"]];
+    for (const gr of groups()) {
+      if (gr.whole) rows.push(["state", gr.s.name, gr.s.name, gr.s.abbr, gr.s.id]);
+      for (const c of gr.counties) rows.push(["county", c.full, gr.s.name, gr.s.abbr, c.id]);
+    }
+    return rows.map((r) => r.map(cell).join(",")).join("\n");
+  }
+  function copyText(text, what) {
+    const n = sel.states.size + sel.counties.size;
+    const fallback = () => {
+      $("#copySheet").hidden = false;
+      const ta = $("#copyText");
+      ta.value = text;
+      ta.focus();
+      ta.select();
+    };
+    try {
+      navigator.clipboard.writeText(text)
+        .then(() => toast(`Copied ${n} ${n === 1 ? "item" : "items"} as ${what}`))
+        .catch(fallback);
+    } catch (e) { fallback(); }
+  }
+  $("#copyList").addEventListener("click", () => copyText(textList(), "a list"));
+  $("#copyCsv").addEventListener("click", () => copyText(textCSV(), "CSV"));
+  $("#copyDone").addEventListener("click", () => { $("#copySheet").hidden = true; });
+
+  /* toast */
+  const toastEl = $("#toast"), toastMsg = $("#toastMsg"), toastBtn = $("#toastAction");
+  let toastTimer = 0, toastFn = null;
+  function toast(msg, actionLabel, fn) {
+    toastMsg.textContent = msg;
+    toastFn = fn || null;
+    toastBtn.hidden = !fn;
+    if (fn) toastBtn.textContent = actionLabel;
+    toastEl.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.hidden = true; toastFn = null; }, fn ? 7000 : 2400);
+  }
+  toastBtn.addEventListener("click", () => {
+    const fn = toastFn;
+    toastEl.hidden = true; toastFn = null;
+    if (fn) fn();
+  });
+
+  /* ---------- search ---------- */
+  const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const index = [];
+  for (const s of S.values()) {
+    index.push({ kind: "s", id: s.id, label: s.name, sub: `State · ${s.counties.length} counties`, name: norm(s.name), words: norm(s.name + " " + s.abbr + " " + s.id).split(" ") });
+  }
+  for (const c of C.values()) {
+    const s = S.get(c.st);
+    index.push({ kind: "c", id: c.id, label: `${c.full}, ${s.abbr}`, sub: `${s.name} · FIPS ${c.id}`, name: norm(c.full), words: norm(`${c.full} ${s.name} ${s.abbr} ${c.id}`).split(" ") });
+  }
+  function search(q) {
+    const nq = norm(q);
+    if (!nq) return [];
+    const toks = nq.split(" ");
+    const res = [];
+    for (const it of index) {
+      if (!toks.every((t) => it.words.some((w) => w.startsWith(t)))) continue;
+      let score = 0;
+      if (it.name === nq) score += 60;
+      if (it.name.startsWith(nq)) score += 30;
+      if (it.kind === "s") score += 15;
+      res.push([score, it]);
+    }
+    res.sort((a, b) => b[0] - a[0] || a[1].label.localeCompare(b[1].label));
+    return res.slice(0, 8).map((r) => r[1]);
+  }
+
+  const qEl = $("#q"), resEl = $("#results");
+  let results = [], activeIdx = 0;
+  function isOn(it) { return it.kind === "s" ? sel.states.has(it.id) : sel.counties.has(it.id); }
+  function renderResults() {
+    const q = qEl.value.trim();
+    if (!q) { closeResults(); return; }
+    results = search(q);
+    activeIdx = Math.min(activeIdx, Math.max(0, results.length - 1));
+    if (!results.length) {
+      resEl.innerHTML = `<li class="r-empty" role="option" aria-disabled="true">No state or county matches “${esc(q)}”</li>`;
+    } else {
+      resEl.innerHTML = results.map((it, i) =>
+        `<li role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === activeIdx}">` +
+        `<span class="sw ${it.kind === "s" ? "sw-state" : "sw-county"}" aria-hidden="true"></span>` +
+        `<span class="r-main"><b>${esc(it.label)}</b><small>${esc(it.sub)}</small></span>` +
+        (isOn(it) ? '<span class="r-on">Selected</span>' : "") + "</li>").join("");
+      qEl.setAttribute("aria-activedescendant", "opt-" + activeIdx);
+    }
+    resEl.hidden = false;
+    qEl.setAttribute("aria-expanded", "true");
+  }
+  function closeResults() {
+    resEl.hidden = true;
+    qEl.setAttribute("aria-expanded", "false");
+    qEl.removeAttribute("aria-activedescendant");
+  }
+  function pick(it) {
+    const set = it.kind === "s" ? sel.states : sel.counties;
+    const was = set.has(it.id);
+    if (!was) { set.add(it.id); commit(); }
+    setMode(it.kind === "s" ? "state" : "county");
+    zoomToBounds(it.kind === "s" ? S.get(it.id).b : C.get(it.id).b, it.kind === "s" ? 12 : 30);
+    toast(was ? `${it.label} is already selected` : `Selected ${it.label}`);
+    qEl.value = "";
+    closeResults();
+  }
+  qEl.addEventListener("input", () => { activeIdx = 0; renderResults(); });
+  qEl.addEventListener("focus", () => { if (qEl.value.trim()) renderResults(); });
+  qEl.addEventListener("blur", () => setTimeout(closeResults, 120));
+  qEl.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (!results.length) return;
+      e.preventDefault();
+      activeIdx = (activeIdx + (e.key === "ArrowDown" ? 1 : results.length - 1)) % results.length;
+      renderResults();
+      const li = resEl.querySelector(`[data-i="${activeIdx}"]`);
+      if (li) li.scrollIntoView({ block: "nearest" });
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (results[activeIdx]) pick(results[activeIdx]);
+    } else if (e.key === "Escape") {
+      if (qEl.value) { qEl.value = ""; closeResults(); } else qEl.blur();
+    }
+  });
+  resEl.addEventListener("pointerdown", (e) => e.preventDefault());
+  resEl.addEventListener("click", (e) => {
+    const li = e.target.closest("[data-i]");
+    if (li) pick(results[+li.dataset.i]);
+  });
+
+  /* ---------- keyboard ---------- */
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    if (t && t.closest && t.closest("input, textarea, select, [contenteditable]")) return;
+    switch (e.key) {
+      case "s": case "S": setMode("state"); break;
+      case "c": case "C": setMode("county"); break;
+      case "+": case "=": zoomBy(1.7); break;
+      case "-": case "_": zoomBy(1 / 1.7); break;
+      case "0": goHome(); break;
+      case "/": e.preventDefault(); qEl.focus(); break;
+      default: return;
+    }
+  });
+
+  /* ---------- boot ---------- */
+  setMode(mode);
+  new ResizeObserver(resize).observe(wrap);
+  resize();
+  paint();
+})();
+</script>
+</body>
+</html>
