@@ -557,11 +557,7 @@ kbd {
     return "County";
   }
 
-  const EXAMPLE = {
-    states: [],
-    counties: ["06001", "06013", "06041", "06055", "06075", "06081", "06085", "06095", "06097", "17031", "48201"]
-  };
-  const LS_KEY = "state-county-picker:v2";
+    const LS_KEY = "state-county-picker:v2";
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const coarse = matchMedia("(pointer: coarse)").matches;
   const MI_PER_UNIT = (6371.0088 / 1300) * 0.621371; // us-atlas Albers USA scale 1300
@@ -619,9 +615,6 @@ kbd {
         return;
       }
     } catch (e) { /* storage unavailable: fall through to the example */ }
-    EXAMPLE.states.forEach((id) => sel.states.add(id));
-    EXAMPLE.counties.forEach((id) => sel.counties.add(id));
-    isExample = true;
   })();
 
   function save() {
