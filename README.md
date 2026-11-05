@@ -11,6 +11,8 @@ Live: https://iafahim.github.io/state-county-picker/
 - **Overlap conflicts (`X`)** — lists every county claimed by two or more layers (who disputes what, where).
 - **Leaner console** — the default screen is map + layers + one status line; the keyboard reference hides behind `?`.
 - **Clean names** — `Bexar · TX` everywhere; CSV keeps the legal name with FIPS as its own column. Import still accepts pasted FIPS codes.
+- **Always-on labels** — state pills at national zoom, suffix-free county pills as you zoom in (layered counties colored, gaps amber). No hovering needed.
+- **Map-first layout** — the console chrome collapsed to a 44px drawer edge; the map owns ~89% of the screen.
 
 ## Using it
 

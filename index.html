@@ -11,17 +11,13 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
 <style>
 /* ============================================================================
-   COVERAGE OPS — flat-black mission console over real map tiles.
-   Full-bleed canvas stage: free keyless raster tiles (OSM streets · Esri
-   imagery · CARTO dark) warped into the Albers USA canvas, county layers on
-   top. HUD: top command bar, left layer rail, right ledger, bottom status
-   line. One accent — signal amber — active/hover/alerts only. No glow, no
-   scanlines: flat surfaces, 1px hairlines. Space Grotesk carries the
-   wordmark/headers/totals; JetBrains Mono carries all data. Text floor 10px;
-   every pair ≥ 4.5:1 (#7A8290 dimmest ink); #8A909C only ≥12px or bold.
-   4px spacing grid; radii 4 / 6 / 10.
+   COVERAGE OPS — flat-black console over a full-bleed map stage: keyless
+   raster tiles warped into the Albers USA canvas, county layers + pill-backed
+   cartographic labels on top, HUD chrome floating above (top bar, layers+
+   ledger drawer, status line). One accent — amber. Text floor 10px; every
+   pair ≥ 4.5:1; 4px spacing grid; radii 4 / 6 / 10.
    ========================================================================== */
-:root { --bg: #0A0B0D;                 /* stage / off-map ground */; --panel: #101216;              /* chrome surfaces */; --raise: #15181E;              /* cards, tooltips, toasts */; --field: #0C0E11;              /* inputs, keycaps */; --hair: rgba(255,255,255,.08); /* hairline */; --hair-2: rgba(255,255,255,.16); --ink: #E7E9EE;                /* primary text */; --ink-2: #8A909C;              /* secondary text — only at ≥12px or bold */; --ink-3: #7A8290;              /* tertiary / labels — ≥4.5:1 on every surface */; --accent: #FFB000;             /* signal amber — active + hover + analysis alerts */; --accent-soft: rgba(255,176,0,.12); --danger: #FF4D5D; --danger-soft: rgba(255,77,93,.10); --focus: #FFB000; --disp: "Space Grotesk", "Archivo", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; --ground: #0A0B0D; --land: #161A20; --county-line: rgba(255,255,255,.09); --state-line: rgba(255,255,255,.30); --hl: #E7E9EE;                 /* "ink" layer + legacy default */; --hl-soft: rgba(255,176,0,.12); --hl-edge: rgba(255,255,255,.28); --hl-ink: #0A0B0D; --hud-h: 56px; --t-fast: 120ms;    /* press, hover, chip latch, keycap travel */; --t-base: 180ms;    /* small feedback: toast snap, danger blink, row rise */; --t-slow: 300ms;    /* entrances, add pop, layer sweep, gate card */; --t-roll: 400ms;    /* ledger-head odometer roll (entrance-only) */; --t-stagger: 40ms;  /* rail-chip entrance stagger step */; --e-snap: cubic-bezier(.2, .8, .2, 1);  /* mechanical decel — hard landing */; --e-std: ease-out;                      /* standard micro-ease */; color-scheme: dark; }
+:root { --bg: #0A0B0D;                 /* stage / off-map ground */; --panel: #101216;              /* chrome surfaces */; --raise: #15181E;              /* cards, tooltips, toasts */; --field: #0C0E11;              /* inputs, keycaps */; --hair: rgba(255,255,255,.08); /* hairline */; --hair-2: rgba(255,255,255,.16); --ink: #E7E9EE;                /* primary text */; --ink-2: #8A909C;              /* secondary text — only at ≥12px or bold */; --ink-3: #7A8290;              /* tertiary / labels — ≥4.5:1 on every surface */; --accent: #FFB000;             /* signal amber — active + hover + analysis alerts */; --accent-soft: rgba(255,176,0,.12); --danger: #FF4D5D; --danger-soft: rgba(255,77,93,.10); --focus: #FFB000; --disp: "Space Grotesk", "Archivo", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; --ground: #0A0B0D; --land: #161A20; --county-line: rgba(255,255,255,.09); --state-line: rgba(255,255,255,.30); --hl: #E7E9EE;                 /* "ink" layer + legacy default */; --hl-soft: rgba(255,176,0,.12); --hl-edge: rgba(255,255,255,.28); --hl-ink: #0A0B0D; --hud-h: 44px; --t-fast: 120ms;    /* press, hover, chip latch, keycap travel */; --t-base: 180ms;    /* small feedback: toast snap, danger blink, row rise */; --t-slow: 300ms;    /* entrances, add pop, layer sweep, gate card */; --t-roll: 400ms;    /* ledger-head odometer roll (entrance-only) */; --t-stagger: 40ms;  /* rail-chip entrance stagger step */; --e-snap: cubic-bezier(.2, .8, .2, 1);  /* mechanical decel — hard landing */; --e-std: ease-out;                      /* standard micro-ease */; color-scheme: dark; }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font: 400 13px/1.5 var(--mono); overflow: hidden; -webkit-font-smoothing: antialiased; }
@@ -39,19 +35,17 @@ input[type="checkbox"] { accent-color: var(--accent); }
 .app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 348px; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "top top" "map ledger" "status status"; }
 
 /* ---------- top command bar ---------- */
-.hud-top { grid-area: top; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: var(--hud-h); padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); background: var(--panel); border-bottom: 1px solid var(--hair); z-index: 20; }
+.hud-top { grid-area: top; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: var(--hud-h); padding: 6px max(16px, env(safe-area-inset-right, 0px)) 6px max(16px, env(safe-area-inset-left, 0px)); background: var(--panel); border-bottom: 1px solid var(--hair); z-index: 20; }
 .brand { display: flex; align-items: baseline; gap: 8px; position: relative; padding-left: 16px; }
 .brand::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: var(--accent); }
 .brand-mark { margin: 0; font: 700 18px/1 var(--disp); letter-spacing: .05em; color: var(--ink); white-space: nowrap; }
 .brand-mark em { font-style: normal; color: var(--accent); }
-.brand-sub { margin: 0; font: 500 10px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
 .conn { flex: none; font: 700 10px/1 var(--mono); letter-spacing: .18em; padding: 4px 8px; border: 1px solid rgba(255,176,0,.45); border-radius: 4px; color: var(--accent); }
 .conn.off { color: var(--ink); border-color: var(--hair-2); }
 
 /* board segment (rendered into #boardBox) */
 .bb-host { flex: 1 1 300px; min-width: 0; max-width: 620px; }
 .bb { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
-.bb-title { font: 700 11px/1 var(--disp); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-2); flex: none; }
 .bb-row { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 0; }
 .bb-slash { font: 600 14px/1 var(--mono); color: var(--accent); flex: none; }
 .bb-row input[type="text"], .bb-me input { flex: 1; min-width: 0; height: 28px; padding: 0 8px; background: var(--field); border: 1px solid var(--hair-2); border-radius: 6px; color: var(--ink); font: 500 12px var(--mono); }
@@ -128,9 +122,9 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
 .toast button:hover { background: var(--accent-soft); }
 
 /* ---------- layer rail ---------- */
-.rail { position: fixed; z-index: 15; left: max(12px, env(safe-area-inset-left, 0px)); top: calc(var(--hud-h) + 12px); bottom: 96px; width: 232px; display: flex; flex-direction: column; gap: 8px; overflow: auto; scrollbar-width: none; }
+.rail { display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 8px; border-bottom: 1px solid var(--hair); scrollbar-width: none; }
 .rail::-webkit-scrollbar { display: none; }
-.rail-head { display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 0; font: 700 11px/1 var(--disp); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-2); }
+.rail-head { display: flex; justify-content: flex-end; align-items: center; padding: 8px 4px 0; }
 .rail-head .x { width: 20px; height: 20px; }
 .x[aria-pressed="true"], .btn[aria-pressed="true"] { color: var(--accent); border-color: rgba(255,176,0,.55); background: var(--accent-soft); }
 .lay-chips { display: flex; flex-direction: column; gap: 4px; }
@@ -168,13 +162,10 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
 .sb-help { all: unset; box-sizing: border-box; flex: none; width: 20px; height: 20px; display: grid; place-items: center; border: 1px solid var(--hair-2); border-radius: 4px; background: var(--field); font: 700 10px/1 var(--mono); color: var(--ink-3); cursor: pointer; transition: color var(--t-fast) var(--e-std), border-color var(--t-fast) var(--e-std); }
 .sb-help:hover, .sb-help[aria-pressed="true"] { color: var(--accent); border-color: rgba(255,176,0,.5); }
 .sb-help:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.hint { margin: 0; font: 400 10px/1.4 var(--mono); color: var(--ink-3); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hint b { color: var(--ink-2); font-weight: 700; }
 
 /* ---------- ledger (right panel) ---------- */
 .ledger { grid-area: ledger; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--panel); border-left: 1px solid var(--hair); overflow-y: auto; overscroll-behavior: contain; z-index: 10; }
-.ledger-head { position: sticky; top: 0; z-index: 5; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-block: 16px 12px; background: var(--panel); border-bottom: 1px solid var(--hair); }
-.ledger-title { font: 700 11px/1 var(--disp); letter-spacing: .16em; color: var(--ink-2); }
+.ledger-head { position: sticky; top: 0; z-index: 5; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-block: 10px 8px; background: var(--panel); border-bottom: 1px solid var(--hair); }
 .totals { display: flex; gap: 16px; }
 .total { display: grid; gap: 4px; }
 .total b { font: 700 21px/1 var(--disp); color: var(--ink); letter-spacing: -.01em; }
@@ -282,6 +273,35 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
 .g-err { margin: 0; min-height: 1.3em; font: 600 12px/1.4 var(--mono); color: var(--danger); }
 .g-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
+/* ---------- layers + ledger drawer (desktop): the console folds into a 44px edge ---------- */
+.drawer { display: contents; }
+.edge { display: none; }
+@media (min-width: 1001px) {
+  .app { display: block; }
+  .map-wrap { position: absolute; inset: 0; }
+  .hud-top { position: absolute; top: 0; left: 0; right: 0; background: rgba(16,18,22,.92); }
+  .hud-status { position: absolute; bottom: 0; left: 0; right: 0; height: 28px; padding-bottom: 0; }
+  .ledger { position: absolute; top: var(--hud-h); right: 0; bottom: 0; width: 348px; z-index: 25; flex-direction: row; transform: translateX(calc(100% - 44px)); transition: transform var(--t-slow) var(--e-snap), visibility var(--t-slow) linear; }
+  .ledger.open { transform: translateX(0); box-shadow: -24px 0 48px rgba(0,0,0,.45); }
+  .ledger .drawer { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; visibility: hidden; transition: visibility var(--t-slow) linear; }
+  .ledger.open .drawer { visibility: visible; }
+  .edge { display: flex; flex-direction: column; align-items: center; flex: none; width: 44px; padding: 6px 0 8px; gap: 2px; border-right: 1px solid var(--hair); overflow-y: auto; scrollbar-width: none; }
+  .zoom-ctl { right: 64px; }
+}
+.edge::-webkit-scrollbar { display: none; }
+#edgeDots { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.edge button { all: unset; box-sizing: border-box; width: 32px; height: 28px; display: grid; place-items: center; border-radius: 6px; color: var(--ink-2); cursor: pointer; transition: background var(--t-fast) var(--e-std), color var(--t-fast) var(--e-std), transform var(--t-fast) var(--e-std); }
+.edge button:hover { background: rgba(255,255,255,.05); color: var(--ink); }
+.edge button:active { transform: scale(.92); }
+.edge button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.edge button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+.edge svg { width: 14px; height: 14px; }
+.edge .e-dot { width: 14px; height: 14px; border-radius: 4px; background: var(--c); box-shadow: 0 0 0 1px rgba(255,255,255,.2); }
+.edge button.on { box-shadow: inset 2.5px 0 0 var(--c); }
+.edge .e-sep { width: 24px; height: 1px; background: var(--hair-2); margin: 4px 0; }
+.edge .e-tog svg { transition: transform var(--t-fast) var(--e-std); }
+.ledger.open .e-tog svg { transform: rotate(180deg); }
+
 /* ---------- interaction discipline: every control answers (hover · active · focus) ---------- */
 .seg button:focus-visible, .zoom-ctl button:focus-visible, .toast button:focus-visible,
 .note button:focus-visible, .recent a:focus-visible, .grp-name:focus-visible,
@@ -332,22 +352,20 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   .total b.bump, .row.new, .grp.new, .toast, .pulse, .hud-top, .hud-status, #map.boot,
   .lay.enter, .lay.snap, .lay .key, .sb-layer.tick, .gate, .gate-card { animation: none !important; }
   .btn, .seg button, .lay, .swt, .chip, .av, .zoom-ctl button, .recent a,
-  .x, .grp-name, .row-name, .toast button, .note button, .bb-lock, .lay .key, .sb-help { transition: none !important; }
+  .x, .grp-name, .row-name, .toast button, .note button, .bb-lock, .lay .key, .sb-help,
+  .edge button, .edge .e-tog svg, .ledger, .ledger .drawer { transition: none !important; }
 }
 
 /* ---------- narrow viewport: stacked console ---------- */
 @media (max-width: 1000px) {
   .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 54fr) auto minmax(0, 46fr); grid-template-areas: "top" "map" "status" "ledger"; }
   .hud-top { gap: 8px; padding-block: 8px; }
-  .brand-sub { display: none; }
   .conn { order: 3; }
   .seg { order: 4; }
   .bb-host { order: 10; flex: 1 1 100%; }
-  .rail { position: static; width: auto; bottom: auto; padding: 12px 12px 4px; border-bottom: 1px solid var(--hair); overflow: visible; }
   .ledger { border-left: 0; border-top: 0; }
   .ledger-head { padding-block: 12px 8px; }
   .total b { font-size: 18px; }
-  .hint { display: none; }
   .sb-layer { display: none; }
   .hud-status { gap: 12px; }
   .toast { max-width: calc(100% - 72px); bottom: 64px; }
@@ -361,7 +379,6 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   <header class="hud-top" id="toolbar">
     <div class="brand">
       <h1 class="brand-mark">COVERAGE<em>OPS</em></h1>
-      <p class="brand-sub">US · 50 states · 3,142 counties</p>
     </div>
     <span class="conn" id="connTag" hidden>LIVE</span>
     <div class="bb-host" id="boardBox"></div>
@@ -369,7 +386,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
       <span class="seg-label">Select</span>
       <button type="button" role="radio" aria-checked="false" data-mode="state" id="modeState"><span class="sw sw-state" aria-hidden="true"></span>States <kbd>S</kbd></button>
       <button type="button" role="radio" aria-checked="true" data-mode="county" id="modeCounty"><span class="sw sw-county" aria-hidden="true"></span>Counties <kbd>C</kbd></button>
-      <button type="button" role="radio" aria-checked="false" data-mode="origin" id="modeOrigin" title="Mark where the vendor lives. Middle-click does this in any mode."><span class="sw sw-origin" aria-hidden="true"></span>Origin <kbd>O</kbd></button>
+      <button type="button" role="radio" aria-checked="false" data-mode="origin" id="modeOrigin" title="Mark the vendor's home county. Middle-click works in any mode."><span class="sw sw-origin" aria-hidden="true"></span>Origin <kbd>O</kbd></button>
     </div>
   </header>
 
@@ -399,18 +416,25 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   <footer class="hud-status">
     <span class="sb-layer" id="sbLayer"></span>
     <span class="sb-county" id="sbCounty">—</span>
-    <div class="scale" id="scale" title="Approximate distance in the lower 48. The Alaska inset is drawn at about one third scale.">
+    <div class="scale" id="scale" title="Scale (lower 48; Alaska inset ≈ 1/3)">
       <span id="scaleLabel">200 mi</span>
       <div class="scale-bar" id="scaleBar" style="width:90px"></div>
     </div>
     <span class="sb-zoom" id="sbZoom">1.0×</span>
-    <p class="hint" id="hint" hidden></p>
-    <button type="button" class="sb-help" id="hintBtn" aria-pressed="false" title="Mouse &amp; keyboard reference (?)">?</button>
+    <button type="button" class="sb-help" id="hintBtn" title="Mouse &amp; keyboard reference (?)">?</button>
   </footer>
 
   <aside class="ledger" aria-label="Your selection">
+   <div class="edge" id="edge">
+    <button type="button" class="e-tog" id="edgeTog" aria-expanded="false" aria-controls="drawerBody" title="Layers &amp; ledger" aria-label="Layers and ledger"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3l-5 5 5 5"/></svg></button>
+    <div id="edgeDots"></div>
+    <span class="e-sep" aria-hidden="true"></span>
+    <button type="button" id="edgeSearch" title="Search ( / )" aria-label="Search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.3"/><path d="M10.3 10.3L14 14"/></svg></button>
+    <button type="button" id="edgeGaps" title="Gap finder (G)" aria-label="Gap finder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 2.5h4.6v4.6H2.5zM8.9 8.9h4.6v4.6H8.9z"/><path d="M10.2 4.8h3.3M4.8 10.2v3.3" stroke-linecap="round"/></svg></button>
+    <button type="button" id="edgeClash" title="Overlap clashes (X)" aria-label="Overlap clashes"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 1.8L3.6 9.2H7l-1 5z"/></svg></button>
+   </div>
+   <div class="drawer" id="drawerBody">
     <header class="ledger-head pad">
-      <span class="ledger-title">LEDGER</span>
       <div class="totals" aria-live="polite">
         <div class="total"><b id="nStates">0</b><span><i class="sw sw-state" aria-hidden="true"></i>States</span></div>
         <div class="total"><b id="nCounties">0</b><span><i class="sw sw-county" aria-hidden="true"></i>Counties</span></div>
@@ -428,7 +452,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     <div class="search pad">
       <div class="search-field">
         <label for="q" class="sr-only">Find a state or county</label>
-        <input id="q" type="search" placeholder="Find a state or county  ( / )" autocomplete="off" spellcheck="false"
+        <input id="q" type="search" placeholder="Search ( / )" autocomplete="off" spellcheck="false"
                role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list">
         <ul id="results" role="listbox" aria-label="Matching places" hidden></ul>
       </div>
@@ -438,8 +462,8 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
       <button type="button" class="btn" id="copyList"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5"/><path d="M10.5 5V3.5A1.5 1.5 0 0 0 9 2H3.5A1.5 1.5 0 0 0 2 3.5V9a1.5 1.5 0 0 0 1.5 1.5H5"/></svg>Copy list</button>
       <button type="button" class="btn" id="copyCsv">Copy CSV</button>
       <button type="button" class="btn" id="importBtn">Import</button>
-      <button type="button" class="btn" id="gapBtn" aria-pressed="false" title="Gap finder: highlight every county covered by no layer — in view or nationwide (G)">Gaps</button>
-      <button type="button" class="btn" id="confBtn" aria-pressed="false" title="Overlap conflicts: list counties claimed by 2+ layers (X)">Clashes</button>
+      <button type="button" class="btn" id="gapBtn" aria-pressed="false" title="Highlight counties no layer covers (G)">Gaps</button>
+      <button type="button" class="btn" id="confBtn" aria-pressed="false" title="Counties claimed by 2+ layers (X)">Clashes</button>
       <button type="button" class="btn quiet" id="clearAll">Clear layer</button>
     </div>
 
@@ -454,14 +478,14 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     </div>
 
     <div class="copy-sheet pad" id="copySheet" hidden>
-      <p id="copySheetMsg">Copying was blocked here. The text below is selected, so press Ctrl+C (⌘C on a Mac) to copy it.</p>
+      <p id="copySheetMsg">Press Ctrl+C (⌘C) to copy the selected text.</p>
       <label for="copyText" class="sr-only">Text to copy</label>
       <textarea id="copyText" readonly></textarea>
       <div><button type="button" class="btn" id="copyDone">Done</button></div>
     </div>
 
     <div class="copy-sheet pad" id="importSheet" hidden>
-      <p><b>Import into the active layer.</b> Paste county names with states, FIPS codes, or a CSV from Copy CSV. One per line. Start a line with “Origin:” to mark an origin.</p>
+      <p><b>Into the active layer:</b> county names, FIPS codes or CSV, one per line. “Origin:” marks an origin.</p>
       <label for="importText" class="sr-only">Paste places to import</label>
       <textarea id="importText" placeholder="Cook County, IL&#10;06075&#10;Colorado (whole state)&#10;Origin: San Francisco County, CA" spellcheck="false"></textarea>
       <div class="imp-row"><input id="importFile" type="file" accept=".csv,.txt,text/csv,text/plain"><label for="importFile" class="sr-only">Choose a file</label></div>
@@ -471,6 +495,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     </div>
 
     <div class="list pad" id="list"></div>
+   </div>
   </aside>
 </div>
 
@@ -486,7 +511,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   const $ = (s) => document.querySelector(s); const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); const wrap = $("#mapWrap");
 
   if (!window.d3 || !window.topojson || !window.US_ATLAS) {
-    wrap.insertAdjacentHTML("beforeend", '<div class="map-error"><p><b>The map could not load.</b><br>Check your internet connection, then reload the page.</p></div>'); return;
+    wrap.insertAdjacentHTML("beforeend", '<div class="map-error"><p><b>The map could not load.</b><br>Check your connection and reload.</p></div>'); return;
   }
 
   /* ---------- reference data ---------- */
@@ -499,7 +524,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     return (st === "51" && n >= 500) || id === "24510" || id === "29510" ? "city" : "County"; // 51xxx = independent cities
   }
 
-  const LS_KEY = "state-county-picker:v3"; const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches; const coarse = matchMedia("(pointer: coarse)").matches;
+  const LS_KEY = "state-county-picker:v3"; const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const MI_PER_UNIT = (6371.0088 / 1300) * 0.621371; // us-atlas Albers USA scale 1300
   const FRAME = [[-58, 12], [958, 607]];
 
@@ -532,7 +557,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   const sel = {
     get states() { return curLayer().s; }, set states(v) { curLayer().s = v; }, get counties() { return curLayer().c; }, set counties(v) { curLayer().c = v; },
     get origins() { return curLayer().o; }, set origins(v) { curLayer().o = v; },
-  }; let mode = "county"; let isExample = false; let justAdded = null;
+  }; let mode = "county"; let justAdded = null;
   let chipBoot = !reduceMotion;   // rail chips stagger-snap on the first render of a load only
   let rollBoot = !reduceMotion;   // ledger-head totals roll up once per load
 
@@ -547,39 +572,30 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
         return;
       }
       raw = localStorage.getItem("state-county-picker:v2");   // older single-selection format
-      if (raw) {
-        const o = JSON.parse(raw); (o.states || []).forEach((k) => S.has(k) && layers[0].s.add(k)); (o.counties || []).forEach((k) => C.has(k) && layers[0].c.add(k));
-      }
+      if (raw) { const o = JSON.parse(raw); (o.states || []).forEach((k) => S.has(k) && layers[0].s.add(k)); (o.counties || []).forEach((k) => C.has(k) && layers[0].c.add(k)); }
     } catch (e) { /* storage unavailable: start empty */ }
   }
   loadLocal();
-
   function save() {
     if (board) return;   // a shared board lives on the server
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ layers: layers.map((l) => ({ id: l.id, name: l.name, color: l.color, s: [...l.s], c: [...l.c], o: [...l.o] })), active: activeId }));
-    } catch (e) { /* not saved; the page still works */ }
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ layers: layers.map((l) => ({ id: l.id, name: l.name, color: l.color, s: [...l.s], c: [...l.c], o: [...l.o] })), active: activeId })); } catch (e) { /* not saved; the page still works */ }
   }
-  const snapshot = () => ({ layers: layers.map((l) => ({ id: l.id, name: l.name, color: l.color, s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) })), active: activeId }); function restore(snap) {
-    if (board) {   // keep the board's layers, put back each layer's contents
-      for (const l of layers) { const o = snap.layers.find((x) => x.id === l.id); if (o) { l.s = new Set(o.s); l.c = new Set(o.c); l.o = new Set(o.o); } }
-    } else {
-      layers = snap.layers.map((l) => ({ ...l, s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) })); activeId = layers.some((l) => l.id === snap.active) ? snap.active : layers[0].id; renderEdit();
-    }
+  const snapshot = () => ({ layers: layers.map((l) => ({ id: l.id, name: l.name, color: l.color, s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) })), active: activeId });
+  function restore(snap) {
+    if (board) { for (const l of layers) { const o = snap.layers.find((x) => x.id === l.id); if (o) { l.s = new Set(o.s); l.c = new Set(o.c); l.o = new Set(o.o); } } }   // keep the board's layers, restore contents
+    else { layers = snap.layers.map((l) => ({ ...l, s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) })); activeId = layers.some((l) => l.id === snap.active) ? snap.active : layers[0].id; renderEdit(); }
     paint(); syncOut();
   }
   function pruneOrigins() { for (const l of layers) for (const id of l.o) if (!l.c.has(id)) l.o.delete(id); }
-  function commit() { pruneOrigins(); isExample = false; paint(); syncOut(); }
+  function commit() { pruneOrigins(); paint(); syncOut(); }
   function toggle(kind, id) {
-    const set = kind === "s" ? sel.states : sel.counties; const on = set.has(id); if (on) set.delete(id); else set.add(id);
-    if (on) popAt(kind, id, pal.danger || "#FF4D5D", MOT.base);        // remove cue: brief danger blink (--t-base)
-    else { justAdded = kind + id; popAt(kind, id, lcol(curLayer())); } // add cue: layer-colored pop (--t-slow)
+    const set = kind === "s" ? sel.states : sel.counties, on = set.has(id); if (on) set.delete(id); else set.add(id);
+    if (on) popAt(kind, id, pal.danger || "#FF4D5D", MOT.base); else { justAdded = kind + id; popAt(kind, id, lcol(curLayer())); }   // danger blink / layer-colored pop
     commit(); return !on;
   }
   function toggleOrigin(id) {
     const L = curLayer(), on = !L.o.has(id);
-    if (on) { L.o.add(id); L.c.add(id); justAdded = "c" + id; if (!reduceMotion) stamp = { id, t: performance.now() }; }  // the star is stamped in
-    else { L.o.delete(id); popAt("c", id, pal.danger || "#FF4D5D", MOT.base); }
+    if (on) { L.o.add(id); L.c.add(id); justAdded = "c" + id; if (!reduceMotion) stamp = { id, t: performance.now() }; } else { L.o.delete(id); popAt("c", id, pal.danger || "#FF4D5D", MOT.base); }
     commit(); return on;
   }
 
@@ -621,12 +637,9 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   let wrapRect = null, canvasRect = null;   // cached viewport rects: nothing on this page ever scrolls
   let atHome = true, panning = false, ready = false, raf = 0, hover = null; let pops = [];
   let sweep = null, stamp = null;   // layer-switch sweep · origin-star stamp (both rAF overlay passes)
-  const toolbarEl = $("#toolbar"); const hudDesk = matchMedia("(min-width: 1001px)"); const railEl = $("#layers"); const PAD = () => {
-    if (hudDesk.matches) {
-      const railW = railEl && railEl.offsetWidth ? railEl.offsetWidth : 232; return { t: 16, r: 24, b: 16, l: railW + 22 };
-    }
-    return { t: 16, r: 16, b: 16, l: 16 };   // stacked layout: the canvas owns its full row
-  };
+  const toolbarEl = $("#toolbar"); const hudDesk = matchMedia("(min-width: 1001px)"); const ledgerEl = document.querySelector(".ledger"); const PAD = () => hudDesk.matches
+    ? { t: 52, r: ledgerEl.classList.contains("open") ? 362 : 58, b: 44, l: 24 }   // full-bleed stage; HUD chrome floats above
+    : { t: 16, r: 16, b: 16, l: 16 };
   // requestDraw(true) repaints only the moving overlay (hover, flashes, other people's cursors)
   const requestDraw = (overlayOnly) => { if (!overlayOnly) baseDirty = true; if (!raf) raf = requestAnimationFrame(draw); };
 
@@ -713,14 +726,14 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     c.push(0); return c;
   };
   const BASEMAPS = {
-    streets: { url: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`, attr: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a> contributors', scrim: 0.5, landScrim: 0.3, maxZoom: 19 },
-    sat: { url: (z, x, y) => `https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/${z}/${y}/${x}`, attr: 'Imagery <a href="https://basemap.nationalmap.gov" target="_blank" rel="noopener">USGS</a> National Map', scrim: 0.42, landScrim: 0.18, maxZoom: 16, usOnly: true },
-    dark: { url: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`, filter: "invert(1) hue-rotate(180deg) brightness(2.05) contrast(0.92) saturate(0.3)", attr: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a> contributors', scrim: 0.44, landScrim: 0.2, maxZoom: 19 },
+    streets: { url: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`, attr: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a> contributors', scrim: 0.42, landScrim: 0.26, maxZoom: 19 },
+    sat: { url: (z, x, y) => `https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/${z}/${y}/${x}`, attr: 'Imagery <a href="https://basemap.nationalmap.gov" target="_blank" rel="noopener">USGS</a> National Map', scrim: 0.36, landScrim: 0.14, maxZoom: 16, usOnly: true },
+    dark: { url: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`, filter: "invert(1) hue-rotate(180deg) brightness(2.05) contrast(0.92) saturate(0.3)", attr: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a> contributors', scrim: 0.36, landScrim: 0.14, maxZoom: 19 },
   }; let baseKind = "dark"; try { const b = localStorage.getItem("scp:base"); if (BASEMAPS[b]) baseKind = b; } catch (e) { /* default dark */ }
   const tiles = new Map();   // "kind z/x/y" -> { img, ok: null|true|false }
   function tileFor(kind, z, x, y) {
     const key = kind + " " + z + "/" + x + "/" + y; let t = tiles.get(key); if (t) return t; if (tiles.size > 240) for (const k of [...tiles.keys()].slice(0, 50)) tiles.delete(k);
-    const B = BASEMAPS[kind]; const src = B.url(z, ((x % (1 << z)) + (1 << z)) % (1 << z), y); const img = new Image(); img.decoding = "async";
+    const B = BASEMAPS[kind]; const img = new Image(); img.decoding = "async";
     img.onload = () => {   // decode() first: an async-decoded image would bake blank
       (img.decode ? img.decode() : Promise.resolve()).catch(() => {}).then(() => {
         if (B.filter) {   // bake the dark look once per tile, not once per frame
@@ -729,12 +742,12 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
         t.ok = true; requestDraw();
       });
     };
-    img.onerror = () => { t.ok = false; }; img.src = src; t = { img, ok: null }; tiles.set(key, t); return t;
+    img.onerror = () => { t.ok = false; }; img.src = B.url(z, ((x % (1 << z)) + (1 << z)) % (1 << z), y); t = { img, ok: null }; tiles.set(key, t); return t;
   }
-  /* one textured triangle: affine-solves source pixels -> the warped screen triangle */
+  /* one textured triangle: affine-solves source pixels -> the warped screen triangle (Cramer; exact on all corners) */
   function tileTri(img, a, b, c, ua, va, ub, vb, uc, vc) {
     ctx.save(); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.closePath(); ctx.clip(); const den = ua * (vc - vb) - ub * vc + uc * vb + (ub - uc) * va; if (den) {
-      const D = -den;   // Cramer solve of the affine (u,v)px -> screen; exact on all three corners
+      const D = -den;
       const m11 = (a[0] * (vb - vc) - va * (b[0] - c[0]) + b[0] * vc - c[0] * vb) / D; const m12 = (a[1] * (vb - vc) - va * (b[1] - c[1]) + b[1] * vc - c[1] * vb) / D;
       const m21 = (ua * (b[0] - c[0]) - a[0] * (ub - uc) + ub * c[0] - uc * b[0]) / D; const m22 = (ua * (b[1] - c[1]) - a[1] * (ub - uc) + ub * c[1] - uc * b[1]) / D;
       const dx = (ua * (vb * c[0] - vc * b[0]) - va * (ub * c[0] - uc * b[0]) + a[0] * (ub * vc - uc * vb)) / D; const dy = (ua * (vb * c[1] - vc * b[1]) - va * (ub * c[1] - uc * b[1]) + a[1] * (ub * vc - uc * vb)) / D;
@@ -745,8 +758,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   const mercY = (lat) => { const s = Math.sin(Math.max(-85, Math.min(85, lat)) * Math.PI / 180); return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)); };   // lat -> tile y fraction
   const mercLat = (t) => Math.atan(Math.sinh(Math.PI * (1 - 2 * t))) * 180 / Math.PI;   // tile y fraction -> lat
   function drawTiles() {
-    const B = BASEMAPS[baseKind]; const ctr = ALBERS.invert(cur.invert([vw / 2, vh / 2])); const z = Math.max(5, Math.min(B.maxZoom || 19, Math.round(Math.log2(cur.k) + (ctr ? Math.log2(Math.cos(ctr[1] * Math.PI / 180)) : -0.35) + 4.998)));
-    const N = 1 << z;
+    const B = BASEMAPS[baseKind]; const ctr = ALBERS.invert(cur.invert([vw / 2, vh / 2])); const z = Math.max(5, Math.min(B.maxZoom || 19, Math.round(Math.log2(cur.k) + (ctr ? Math.log2(Math.cos(ctr[1] * Math.PI / 180)) : -0.35) + 4.998))); const N = 1 << z;
     // viewport lon/lat bounds from a 5x5 sample grid (invert is null in the projection's gaps)
     let lon0 = 1e9, lon1 = -1e9, lat0 = 1e9, lat1 = -1e9; for (let i = 0; i <= 4; i++) for (let j = 0; j <= 4; j++) {
       const ll = ALBERS.invert(cur.invert([vw * i / 4, vh * j / 4])); if (!ll) continue; if (ll[0] < lon0) lon0 = ll[0]; if (ll[0] > lon1) lon1 = ll[0]; if (ll[1] < lat0) lat0 = ll[1]; if (ll[1] > lat1) lat1 = ll[1];
@@ -758,11 +770,11 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
         let ok = true, onScreen = false, route = -1; for (let a = 0; a <= G && ok; a++) for (let b = 0; b <= G; b++) {
           const p = proj([(tx + a / G) / N * 360 - 180, mercLat((ty + b / G) / N)], B.usOnly); if (!p) { ok = false; break; }
           if (route < 0) route = p[2]; else if (p[2] !== route) { ok = false; break; }   // a tile straddling the inset boundary would tear — skip it
-          const sx = p[0] * cur.k + cur.x, sy = p[1] * cur.k + cur.y; pts[b * (G + 1) + a] = [sx, sy]; if (sx > -400 && sy > -400 && sx < vw + 400 && sy < vh + 400) onScreen = true;   // margin >= one tile: quads that clip the viewport stay
+          const sx = p[0] * cur.k + cur.x, sy = p[1] * cur.k + cur.y; pts[b * (G + 1) + a] = [sx, sy]; if (sx > -400 && sy > -400 && sx < vw + 400 && sy < vh + 400) onScreen = true;   // margin >= one tile
         }
         if (!ok || !onScreen) continue;
-        let gx = 0, gy = 0; for (let i = 0; i < pts.length; i++) { gx += pts[i][0]; gy += pts[i][1]; } gx /= pts.length; gy /= pts.length;   // quad centroid
-        for (let i = 0; i < pts.length; i++) { const dx = pts[i][0] - gx, dy = pts[i][1] - gy, d = Math.hypot(dx, dy) || 1; pts[i][0] += dx / d * 0.75; pts[i][1] += dy / d * 0.75; }   // overlap ~0.75px: no AA seams
+        let gx = 0, gy = 0; for (const p of pts) { gx += p[0]; gy += p[1]; } gx /= pts.length; gy /= pts.length;   // quad centroid
+        for (const p of pts) { const dx = p[0] - gx, dy = p[1] - gy, d = Math.hypot(dx, dy) || 1; p[0] += dx / d * 0.75; p[1] += dy / d * 0.75; }   // overlap ~0.75px: no AA seams
         const t = tileFor(baseKind, z, tx, ty); const iw = t.ok === true ? ((t.img.naturalWidth || t.img.width) || 0) : 0; if (!iw) continue; const ts = iw, W = G + 1;
         for (let a = 0; a < G; a++) for (let b = 0; b < G; b++) {
           const A = pts[b * W + a], Bc = pts[b * W + a + 1], Cc = pts[(b + 1) * W + a + 1], D = pts[(b + 1) * W + a]; const u0 = a * ts / G, u1 = (a + 1) * ts / G, v0 = b * ts / G, v1 = (b + 1) * ts / G;
@@ -773,7 +785,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   }
 
   /* ---------- drawing ---------- */
-  const FONT = '"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace'; const widthCache = new Map(); function textW(text, font) {
+  const FONT = '"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace'; const LABEL_BG = "rgba(10,11,13,.85)";   /* the --bg pill: holds ≥4.5:1 on every tile mode */ const widthCache = new Map(); function textW(text, font) {
     const key = font + text; let w = widthCache.get(key); if (w === undefined) { ctx.font = font; w = ctx.measureText(text).width; widthCache.set(key, w); }
     return w;
   }
@@ -789,80 +801,49 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
 
   /* diagonal stripe families in screen space, clipped to a world-space shape (one family per color) */
   function hatch(shape, b, k, cols, alpha, pitch, width) {
-    ctx.save(); ctx.clip(shape); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const x0 = Math.max(0, b[0][0] * k + cur.x), x1 = Math.min(vw, b[1][0] * k + cur.x);
-    const y0 = Math.max(0, b[0][1] * k + cur.y), y1 = Math.min(vh, b[1][1] * k + cur.y); const hgt = y1 - y0, n = cols.length, step = pitch * n; ctx.lineWidth = width; ctx.lineCap = "butt"; ctx.globalAlpha = alpha;
-    for (let j = 0; j < n; j++) {
-      ctx.strokeStyle = cols[j]; ctx.beginPath(); for (let d = x0 - hgt + j * pitch; d < x1; d += step) { ctx.moveTo(d, y1); ctx.lineTo(d + hgt, y0); }
-      ctx.stroke();
+    ctx.save(); ctx.clip(shape); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const x0 = Math.max(0, b[0][0] * k + cur.x), x1 = Math.min(vw, b[1][0] * k + cur.x), y0 = Math.max(0, b[0][1] * k + cur.y), y1 = Math.min(vh, b[1][1] * k + cur.y);
+    const hgt = y1 - y0, n = cols.length, step = pitch * n; ctx.lineWidth = width; ctx.lineCap = "butt"; ctx.globalAlpha = alpha; for (let j = 0; j < n; j++) {
+      ctx.strokeStyle = cols[j]; ctx.beginPath(); for (let d = x0 - hgt + j * pitch; d < x1; d += step) { ctx.moveTo(d, y1); ctx.lineTo(d + hgt, y0); } ctx.stroke();
     }
     ctx.globalAlpha = 1; ctx.restore();
   }
 
   function renderBase(k, rel, vx0, vy0, vx1, vy1) {
-    const vis = (b) => b[1][0] >= vx0 && b[0][0] <= vx1 && b[1][1] >= vy0 && b[0][1] <= vy1; const lw = (px) => px / k; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = pal.ground; ctx.fillRect(0, 0, vw, vh);
-    // real map tiles under everything (ground fill is the fallback while tiles load / when offline)
-    drawTiles(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * cur.x, dpr * cur.y); ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.globalAlpha = 1;
-
-    // scrim: the whole view dims once; US land gets a second pass — the console stays dark, geography shows through
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = "rgba(10,11,13," + BASEMAPS[baseKind].scrim + ")"; ctx.fillRect(0, 0, vw, vh);
-    ctx.fillStyle = "rgba(10,11,13," + (BASEMAPS[baseKind].landScrim || 0) + ")"; const visStates = []; for (const s of S.values()) if (vis(s.b)) ctx.fill(s.p);
-    ctx.globalAlpha = 1; ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * cur.x, dpr * cur.y);
-
-    // covered counties: layer color at ~72%, or dense stripes where layers overlap
-    ctx.globalAlpha = 0.72; for (const [id, idxs] of cover) {
-      if (idxs.length !== 1) continue; const c = C.get(id); if (!vis(c.b)) continue; ctx.fillStyle = lcol(layers[idxs[0]]); ctx.fill(cp(c));
-    }
-    ctx.globalAlpha = 1; for (const [id, idxs] of cover) {
-      const c = C.get(id);
-      if (idxs.length > 1 && vis(c.b)) hatch(cp(c), c.b, k, idxs.map((i) => lcol(layers[i])), 1, 8, 5.66);   // one stripe family per layer
-    }
-
+    const vis = (b) => b[1][0] >= vx0 && b[0][0] <= vx1 && b[1][1] >= vy0 && b[0][1] <= vy1, lw = (px) => px / k, B = BASEMAPS[baseKind];
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = pal.ground; ctx.fillRect(0, 0, vw, vh);
+    drawTiles();   // real map tiles under everything; the ground fill is the offline fallback
+    // scrim: the whole view dims once, US land twice — the console stays dark, geography shows through
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = "rgba(10,11,13," + B.scrim + ")"; ctx.fillRect(0, 0, vw, vh); ctx.fillStyle = "rgba(10,11,13," + (B.landScrim || 0) + ")";
+    const visStates = []; for (const s of S.values()) if (vis(s.b)) { visStates.push(s); ctx.fill(s.p); }
+    ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * cur.x, dpr * cur.y); ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.globalAlpha = 1;
+    // covered counties: layer color at ~72%, dense stripes where layers overlap (one family per layer)
+    ctx.globalAlpha = 0.72; for (const [id, idxs] of cover) { if (idxs.length !== 1) continue; const c = C.get(id); if (vis(c.b)) { ctx.fillStyle = lcol(layers[idxs[0]]); ctx.fill(cp(c)); } }
+    ctx.globalAlpha = 1; for (const [id, idxs] of cover) { const c = C.get(id); if (idxs.length > 1 && vis(c.b)) hatch(cp(c), c.b, k, idxs.map((i) => lcol(layers[i])), 1, 8, 5.66); }
     // county borders
     ctx.strokeStyle = pal["county-line"]; ctx.lineWidth = lw(0.7); ctx.globalAlpha = mode === "state" ? 0.55 : 1; for (const s of visStates) ctx.stroke(countyEdges(s)); ctx.globalAlpha = 1;
-
     // gap finder: uncovered counties hatch in amber — the uncovered-market map
-    if (analysis && analysis.kind === "gaps") {
-      for (const c of analysis.list) {
-        if (!vis(c.b)) continue; hatch(cp(c), c.b, k, [pal.accent || "#FFB000"], 0.42, 13, 2.4); ctx.strokeStyle = pal.accent || "#FFB000"; ctx.globalAlpha = 0.85; ctx.lineWidth = lw(1.2); ctx.stroke(cp(c)); ctx.globalAlpha = 1;
-      }
+    if (analysis && analysis.kind === "gaps") for (const c of analysis.list) {
+      if (!vis(c.b)) continue; hatch(cp(c), c.b, k, [pal.accent || "#FFB000"], 0.42, 13, 2.4); ctx.strokeStyle = pal.accent || "#FFB000"; ctx.globalAlpha = 0.85; ctx.lineWidth = lw(1.2); ctx.stroke(cp(c)); ctx.globalAlpha = 1;
     }
-
     // covered county outline
-    if (cover.size) {
-      ctx.strokeStyle = pal.ink; ctx.globalAlpha = 0.55; ctx.lineWidth = lw(0.9); for (const [id] of cover) { const c = C.get(id); if (vis(c.b)) ctx.stroke(cp(c)); }
-      ctx.globalAlpha = 1;
-    }
-
+    if (cover.size) { ctx.strokeStyle = pal.ink; ctx.globalAlpha = 0.55; ctx.lineWidth = lw(0.9); for (const [id] of cover) { const c = C.get(id); if (vis(c.b)) ctx.stroke(cp(c)); } ctx.globalAlpha = 1; }
     // overlap conflicts: counties claimed by 2+ layers get a danger outline
-    if (analysis && analysis.kind === "clash") {
-      ctx.strokeStyle = pal.danger || "#FF4D5D"; ctx.globalAlpha = 0.9; ctx.lineWidth = lw(1.6); for (const c of analysis.list) if (vis(c.b)) ctx.stroke(cp(c)); ctx.globalAlpha = 1;
-    }
-
-    // whole-state coverage: 20% tint + diagonal hatch in the layer's color
-    for (const { id, li } of stateCover) {
-      const s = S.get(id), col = lcol(layers[li]); if (!vis(s.b)) continue; ctx.save(); ctx.clip(s.p); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = col; ctx.globalAlpha = 0.2;
-      ctx.fillRect(Math.max(0, s.b[0][0] * k + cur.x), Math.max(0, s.b[0][1] * k + cur.y),
-        Math.min(vw, s.b[1][0] * k + cur.x) - Math.max(0, s.b[0][0] * k + cur.x), Math.min(vh, s.b[1][1] * k + cur.y) - Math.max(0, s.b[0][1] * k + cur.y)); ctx.restore(); hatch(s.p, s.b, k, [col], 0.75, 7, 1.3);
-    }
-
-    // state borders (also the coastline)
-    ctx.strokeStyle = pal["state-line"]; ctx.lineWidth = lw(1.25); ctx.stroke(stateEdges); for (const { id, li } of stateCover) {
-      const s = S.get(id); if (!vis(s.b)) continue; ctx.strokeStyle = lcol(layers[li]); ctx.lineWidth = lw(2.4); ctx.stroke(s.p);
-    }
-
-    // origins: a double outline in the layer's color
-    for (const { id, li } of originList) {
-      const c = C.get(id); if (!vis(c.b)) continue; ctx.strokeStyle = pal.land; ctx.lineWidth = lw(5); ctx.stroke(cp(c)); ctx.strokeStyle = lcol(layers[li]); ctx.lineWidth = lw(2.6); ctx.stroke(cp(c));
-    }
-
+    if (analysis && analysis.kind === "clash") { ctx.strokeStyle = pal.danger || "#FF4D5D"; ctx.globalAlpha = 0.9; ctx.lineWidth = lw(1.6); for (const c of analysis.list) if (vis(c.b)) ctx.stroke(cp(c)); ctx.globalAlpha = 1; }
+    // whole-state coverage: 20% tint + hatch in the layer's color
+    for (const { id, li } of stateCover) { const s = S.get(id), col = lcol(layers[li]); if (!vis(s.b)) continue; ctx.save(); ctx.clip(s.p); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = col; ctx.globalAlpha = 0.2; ctx.fillRect(Math.max(0, s.b[0][0] * k + cur.x), Math.max(0, s.b[0][1] * k + cur.y), Math.min(vw, s.b[1][0] * k + cur.x) - Math.max(0, s.b[0][0] * k + cur.x), Math.min(vh, s.b[1][1] * k + cur.y) - Math.max(0, s.b[0][1] * k + cur.y)); ctx.restore(); hatch(s.p, s.b, k, [col], 0.75, 7, 1.3); }
+    // state borders (also the coastline) + covered-state outline + origin double outline
+    ctx.strokeStyle = pal["state-line"]; ctx.lineWidth = lw(1.25); ctx.stroke(stateEdges);
+    for (const { id, li } of stateCover) { const s = S.get(id); if (!vis(s.b)) continue; ctx.strokeStyle = lcol(layers[li]); ctx.lineWidth = lw(2.4); ctx.stroke(s.p); }
+    for (const { id, li } of originList) { const c = C.get(id); if (!vis(c.b)) continue; ctx.strokeStyle = pal.land; ctx.lineWidth = lw(5); ctx.stroke(cp(c)); ctx.strokeStyle = lcol(layers[li]); ctx.lineWidth = lw(2.6); ctx.stroke(cp(c)); }
     drawLabels(visStates, rel, vx0, vy0, vx1, vy1); drawOriginMarks(vx0, vy0, vx1, vy1);
   }
 
   function drawOverlay(k, now, lw) {
-    // hover: signal-amber outline
+    // hover: signal-amber outline + an always-on name pill ("Bexar · TX")
     if (hover) {
-      const shape = hover.kind === "s" ? S.get(hover.id).p : cp(C.get(hover.id)); ctx.globalAlpha = 1; ctx.fillStyle = pal["hl-soft"]; ctx.fill(shape); ctx.strokeStyle = pal.accent || "#FFB000"; ctx.lineWidth = lw(2.2);
-      ctx.stroke(shape);
+      const isS = hover.kind === "s", o = isS ? S.get(hover.id) : C.get(hover.id), shape = isS ? o.p : cp(o); ctx.globalAlpha = 1; ctx.fillStyle = pal["hl-soft"]; ctx.fill(shape); ctx.strokeStyle = pal.accent || "#FFB000"; ctx.lineWidth = lw(2.2); ctx.stroke(shape);
+      const t = isS ? o.name.toUpperCase() : o.name + " \u00b7 " + S.get(o.st).abbr; ctx.font = `600 12px ${FONT}`; const w = textW(t, ctx.font) + 10, x = Math.max(w / 2 + 4, Math.min(vw - w / 2 - 4, o.lp[0] * cur.k + cur.x)), y = Math.max(14, o.lp[1] * cur.k + cur.y - 16);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = LABEL_BG; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - w / 2, y - 8.5, w, 17, 4) : ctx.rect(x - w / 2, y - 8.5, w, 17); ctx.fill(); ctx.fillStyle = pal.ink; ctx.fillText(t, x, y); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * cur.x, dpr * cur.y);
     }
 
     // selection pops
@@ -873,73 +854,43 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     drawSweep(now, lw); drawStamp(now, k); ctx.globalAlpha = 1;
   }
 
+  /* labels: pill-backed names baked with the base map (view/selection changes only — never per
+     pointermove). States at national zoom; county names from ~2×, denser as you zoom; priority
+     covered > gap-hatched > biggest. Pills are --bg at .85, so text holds ≥4.5:1 on any tile. */
   function drawLabels(visStates, rel, vx0, vy0, vx1, vy1) {
-    const k = cur.k; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round"; const grid = new Map(), CELL = 64; const free = (x, y, w, h) => {
-      const x0 = Math.floor((x - w / 2) / CELL), x1 = Math.floor((x + w / 2) / CELL); const y0 = Math.floor((y - h / 2) / CELL), y1 = Math.floor((y + h / 2) / CELL);
-      for (let gx = x0; gx <= x1; gx++) for (let gy = y0; gy <= y1; gy++) {
-        const arr = grid.get(gx * 100003 + gy); if (arr) for (const o of arr) if (Math.abs(o[0] - x) * 2 < o[2] + w && Math.abs(o[1] - y) * 2 < o[3] + h) return false;
-      }
-      for (let gx = x0; gx <= x1; gx++) for (let gy = y0; gy <= y1; gy++) {
-        const key = gx * 100003 + gy; (grid.get(key) || grid.set(key, []).get(key)).push([x, y, w, h]);
-      }
-      return true;
-    }; const put = (text, x, y, font, fill, halo, haloW) => {
-      ctx.font = font; ctx.lineWidth = haloW; ctx.strokeStyle = halo; ctx.strokeText(text, x, y); ctx.fillStyle = fill; ctx.fillText(text, x, y);
-    };
-
-    // states
-    const SF = `700 11px ${FONT}`; setSpacing(1.4); for (const s of visStates) {
-      const x = s.lp[0] * k + cur.x, y = s.lp[1] * k + cur.y; if (x < 0 || y < 0 || x > vw || y > vh) continue; const bw = (s.b[1][0] - s.b[0][0]) * k, bh = (s.b[1][1] - s.b[0][1]) * k; const full = s.name.toUpperCase();
-      let text = null; if (bw > textW(full, SF) + 14 && bh > 26) text = full; else if (bw > 36 && bh > 22) text = s.abbr; if (!text) continue; const w = textW(text, SF) + 6; if (!free(x, y, w, 16)) continue;
-      put(text, x, y, SF, pal.ink, pal.land, 4);
-    }
-
-    // counties, largest first
-    if (rel > 1.4) {
-      setSpacing(0); const CF = `500 12px ${FONT}`; const cand = []; for (const s of visStates) for (const c of s.counties) {
-        if (c.b[1][0] < vx0 || c.b[0][0] > vx1 || c.b[1][1] < vy0 || c.b[0][1] > vy1) continue; const bw = (c.b[1][0] - c.b[0][0]) * k, bh = (c.b[1][1] - c.b[0][1]) * k; if (bh < 19 || bw < 26) continue; cand.push(c);
-      }
-      cand.sort((a, b) => b.area - a.area); let n = 0; for (const c of cand) {
-        const x = c.lp[0] * k + cur.x, y = c.lp[1] * k + cur.y; if (x < 0 || y < 0 || x > vw || y > vh) continue; const bw = (c.b[1][0] - c.b[0][0]) * k; const w = textW(c.name, CF);
-        if (bw < w + 8 || !free(x, y, w + 6, 16)) continue; const idxs = cover.get(c.id); if (idxs && idxs.length === 1) { const col = lcol(layers[idxs[0]]); put(c.name, x, y, CF, textOn(col), col, 3.5); }
-        else put(c.name, x, y, CF, pal.ink, pal.land, 3.5); if (++n >= 450) break;
-      }
+    const k = cur.k; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round"; const grid = new Map(), CELL = 48;
+    const place = (x, y, w, h) => { const x0 = Math.floor((x - w / 2) / CELL), x1 = Math.floor((x + w / 2) / CELL), y0 = Math.floor((y - h / 2) / CELL), y1 = Math.floor((y + h / 2) / CELL); for (let gx = x0; gx <= x1; gx++) for (let gy = y0; gy <= y1; gy++) { const arr = grid.get(gx * 100003 + gy); if (arr) for (const o of arr) if (Math.abs(o[0] - x) * 2 < o[2] + w && Math.abs(o[1] - y) * 2 < o[3] + h) return false; } for (let gx = x0; gx <= x1; gx++) for (let gy = y0; gy <= y1; gy++) { const key = gx * 100003 + gy; (grid.get(key) || grid.set(key, []).get(key)).push([x, y, w, h]); } return true; };
+    const pill = (text, x, y, font, h, fill, bg) => { const w = textW(text, font) + 10; if (!place(x, y, w, h)) return; ctx.font = font; ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - w / 2, y - h / 2, w, h, 4) : ctx.rect(x - w / 2, y - h / 2, w, h); ctx.fill(); ctx.fillStyle = fill; ctx.fillText(text, x, y); };
+    const SF = `700 11px ${FONT}`; setSpacing(1.4);
+    for (const s of visStates) { const x = s.lp[0] * k + cur.x, y = s.lp[1] * k + cur.y; if (x < -30 || y < -16 || x > vw + 30 || y > vh + 16) continue; const bw = (s.b[1][0] - s.b[0][0]) * k, bh = (s.b[1][1] - s.b[0][1]) * k, full = s.name.toUpperCase(); const t = bw > textW(full, SF) + 16 && bh > 30 ? full : bw > 40 && bh > 24 ? s.abbr : null; if (t) pill(t, x, y, SF, 15, pal.ink, LABEL_BG); }
+    if (rel > 1.9) { setSpacing(0); const CF = `500 12px ${FONT}`; const gapOn = analysis && analysis.kind === "gaps"; const minPx = rel < 4 ? 34 : rel < 9 ? 26 : rel < 18 ? 18 : 13; const cand = [];
+      for (const s of visStates) for (const c of s.counties) { if (c.b[1][0] < vx0 || c.b[0][0] > vx1 || c.b[1][1] < vy0 || c.b[0][1] > vy1) continue; const cov = cover.has(c.id), px = Math.min((c.b[1][0] - c.b[0][0]) * k, (c.b[1][1] - c.b[0][1]) * k); if (px < (cov || (gapOn && !cov) ? 13 : minPx)) continue; cand.push([cov ? 2 : gapOn && !cov ? 1 : 0, c.area, c]); }
+      cand.sort((a, b) => b[0] - a[0] || b[1] - a[1]);
+      for (let i = 0; i < cand.length && i < 500; i++) { const c = cand[i][2], x = c.lp[0] * k + cur.x, y = c.lp[1] * k + cur.y; if (x < 0 || y < 0 || x > vw || y > vh) continue; const idxs = cover.get(c.id), col = idxs && idxs.length === 1 ? lcol(layers[idxs[0]]) : null; pill(c.name, x, y, CF, 17, col ? textOn(col) : gapOn && !idxs ? pal.accent || "#FFB000" : pal.ink, col || LABEL_BG); }
     }
     setSpacing(0);
   }
 
+  function starMark(x, y, r, col) { ctx.beginPath(); ctx.arc(x, y, r + 1.5, 0, 6.2832); ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fillStyle = col; ctx.fill(); ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -1.5708 + i * 0.6283, rr = i % 2 ? r * 0.42 : r * 0.78; ctx[i ? "lineTo" : "moveTo"](x + Math.cos(a) * rr, y + Math.sin(a) * rr); } ctx.closePath(); ctx.fillStyle = textOn(col); ctx.fill(); }
   function drawOriginMarks(vx0, vy0, vx1, vy1) {
     if (!originList.length) return; const rel = cur.k / base.k, r = Math.max(6, Math.min(11, 5 + rel * 0.7)); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); for (const { id, li } of originList) {
-      const c = C.get(id); if (c.lp[0] < vx0 || c.lp[0] > vx1 || c.lp[1] < vy0 || c.lp[1] > vy1) continue; const x = c.lp[0] * cur.k + cur.x, col = lcol(layers[li]);
-      const y = c.lp[1] * cur.k + cur.y - (rel > 1.4 ? r + 9 : 0);   // sit above the county name once names show
-      ctx.beginPath(); ctx.arc(x, y, r + 1.5, 0, 6.2832); ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fillStyle = col; ctx.fill(); ctx.beginPath();
-      for (let i = 0; i < 10; i++) { const a = -1.5708 + i * 0.6283, rr = i % 2 ? r * 0.42 : r * 0.78; ctx[i ? "lineTo" : "moveTo"](x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
-      ctx.closePath(); ctx.fillStyle = textOn(col); ctx.fill();
+      const c = C.get(id); if (c.lp[0] < vx0 || c.lp[0] > vx1 || c.lp[1] < vy0 || c.lp[1] > vy1) continue; starMark(c.lp[0] * cur.k + cur.x, c.lp[1] * cur.k + cur.y - (rel > 1.9 ? r + 11 : 0), r, lcol(layers[li]));   // above the name pill once names show
     }
   }
 
   const themeMq = matchMedia("(prefers-color-scheme: dark)"); const repaintTheme = () => { readPalette(); requestDraw(); };
   (themeMq.addEventListener ? themeMq.addEventListener("change", repaintTheme) : themeMq.addListener(repaintTheme));
-  new MutationObserver(repaintTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] }); if (document.fonts && document.fonts.load) {
-    Promise.all([document.fonts.load(`700 12px "JetBrains Mono"`), document.fonts.load(`500 12px "JetBrains Mono"`)]).then(() => { widthCache.clear(); requestDraw(); }).catch(() => {});
-  }
-
-  function popAt(kind, id, color, life) {
-    if (reduceMotion) return; pops.push({ t: performance.now(), color, life: life || MOT.slow, shape: kind === "s" ? S.get(id).p : cp(C.get(id)) }); requestDraw(true);
-  }
-
-  /* layer-switch sweep: the layer's visible counties brighten once, left → right,
-     a single rAF alpha pass over the base map — total ≤ --t-slow, ≤220 counties
-     sampled evenly so the reading sweeps the full span */
+  new MutationObserver(repaintTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  if (document.fonts && document.fonts.load) Promise.all([document.fonts.load(`700 12px "JetBrains Mono"`), document.fonts.load(`500 12px "JetBrains Mono"`)]).then(() => { widthCache.clear(); requestDraw(); }).catch(() => {});
+  function popAt(kind, id, color, life) { if (reduceMotion) return; pops.push({ t: performance.now(), color, life: life || MOT.slow, shape: kind === "s" ? S.get(id).p : cp(C.get(id)) }); requestDraw(true); }
+  /* layer-switch sweep: the layer's visible counties brighten once, left → right — a single
+     rAF alpha pass over the base map, total ≤ --t-slow, ≤220 counties sampled evenly */
   const SWEEP_N = 220; function pulseLayer(L) {
     sweep = null; if (reduceMotion || !ready) return; const [vx0, vy0] = cur.invert([0, 0]), [vx1, vy1] = cur.invert([vw, vh]); const inView = (lp) => lp[0] >= vx0 && lp[0] <= vx1 && lp[1] >= vy0 && lp[1] <= vy1; const list = [];
     for (const id of L.c) { const c = C.get(id); if (c && inView(c.lp)) list.push(c); }
-    list.sort((a, b) => a.lp[0] - b.lp[0]); if (list.length > SWEEP_N) {
-      const thin = []; for (let i = 0; i < SWEEP_N; i++) thin.push(list[Math.round(i * (list.length - 1) / (SWEEP_N - 1))]); list.length = 0; list.push(...thin);
-    }
-    const states = []; for (const id of L.s) {
-      const s = S.get(id); if (s && s.b[1][0] >= vx0 && s.b[0][0] <= vx1 && s.b[1][1] >= vy0 && s.b[0][1] <= vy1) states.push(s);
-    }
+    list.sort((a, b) => a.lp[0] - b.lp[0]);
+    if (list.length > SWEEP_N) { const thin = []; for (let i = 0; i < SWEEP_N; i++) thin.push(list[Math.round(i * (list.length - 1) / (SWEEP_N - 1))]); list.length = 0; list.push(...thin); }
+    const states = []; for (const id of L.s) { const s = S.get(id); if (s && s.b[1][0] >= vx0 && s.b[0][0] <= vx1 && s.b[1][1] >= vy0 && s.b[0][1] <= vy1) states.push(s); }
     sweep = { col: lcol(L), list, states, t0: performance.now() }; requestDraw(true);
   }
   function drawSweep(now, lw) {
@@ -947,9 +898,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     const win = MOT.fast, span = Math.max(0, MOT.slow - win), n = sweep.list.length; for (let i = 0; i < n; i++) {
       const p = (now - sweep.t0 - span * (n > 1 ? i / (n - 1) : 0)) / win; if (p <= 0 || p >= 1) continue; ctx.globalAlpha = Math.sin(Math.PI * p) * 0.6; ctx.fillStyle = sweep.col; ctx.fill(cp(sweep.list[i]));
     }
-    const ps = (now - sweep.t0) / win; if (ps > 0 && ps < 1) {
-      ctx.globalAlpha = Math.sin(Math.PI * ps) * 0.8; ctx.strokeStyle = sweep.col; ctx.lineWidth = lw(2.4); for (const s of sweep.states) ctx.stroke(s.p);
-    }
+    const ps = (now - sweep.t0) / win; if (ps > 0 && ps < 1) { ctx.globalAlpha = Math.sin(Math.PI * ps) * 0.8; ctx.strokeStyle = sweep.col; ctx.lineWidth = lw(2.4); for (const s of sweep.states) ctx.stroke(s.p); }
     ctx.globalAlpha = 1;
   }
 
@@ -958,23 +907,19 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     if (!stamp) return; if (!curLayer().o.has(stamp.id)) { stamp = null; return; }
     const p = (now - stamp.t) / MOT.slow; if (p >= 1) { stamp = null; return; }
     const c = C.get(stamp.id); if (!c) { stamp = null; return; }
-    const e = 1 - Math.pow(1 - Math.max(0, p), 3); const rel = cur.k / base.k; const r = Math.max(6, Math.min(11, 5 + rel * 0.7)); const x = c.lp[0] * cur.k + cur.x, y = c.lp[1] * cur.k + cur.y - (rel > 1.4 ? r + 9 : 0);
+    const e = 1 - Math.pow(1 - Math.max(0, p), 3); const rel = cur.k / base.k; const r = Math.max(6, Math.min(11, 5 + rel * 0.7)); const x = c.lp[0] * cur.k + cur.x, y = c.lp[1] * cur.k + cur.y - (rel > 1.9 ? r + 11 : 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.translate(x, y); ctx.rotate(-0.5 * (1 - e)); ctx.scale(1 + 0.6 * (1 - e), 1 + 0.6 * (1 - e)); ctx.globalAlpha = Math.min(1, p * 5);
-    ctx.beginPath(); ctx.arc(0, 0, r + 1.5, 0, 6.2832); ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.fillStyle = lcol(curLayer()); ctx.fill(); ctx.beginPath();
-    for (let i = 0; i < 10; i++) { const a = -1.5708 + i * 0.6283, rr = i % 2 ? r * 0.42 : r * 0.78; ctx[i ? "lineTo" : "moveTo"](Math.cos(a) * rr, Math.sin(a) * rr); }
-    ctx.closePath(); ctx.fillStyle = textOn(lcol(curLayer())); ctx.fill(); ctx.globalAlpha = 1; ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * cur.x, dpr * cur.y);
+    starMark(0, 0, r, lcol(curLayer())); ctx.globalAlpha = 1; ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * cur.x, dpr * cur.y);
   }
 
   /* ---------- hover, tooltip and picking ---------- */
-  const tipEl = $("#tip"); let tipFor = null, lastPointer = "mouse"; function showHover(kind, id) {
-    if (hover && hover.kind === kind && hover.id === id) return; hover = { kind, id }; requestDraw(true);
-  }
+  const tipEl = $("#tip"); let tipFor = null, lastPointer = "mouse";
+  function showHover(kind, id) { if (hover && hover.kind === kind && hover.id === id) return; hover = { kind, id }; requestDraw(true); }
   function clearHover() { if (hover) { hover = null; requestDraw(true); } }
   function pickAt(e, wantCounty) {
     const r = canvasRect || canvas.getBoundingClientRect(); const [x, y] = cur.invert([e.clientX - r.left, e.clientY - r.top]); for (const s of S.values()) {
-      if (x < s.b[0][0] || x > s.b[1][0] || y < s.b[0][1] || y > s.b[1][1] || !hitCtx.isPointInPath(s.p, x, y)) continue; if (mode === "state" && !wantCounty) return { kind: "s", id: s.id, st: s.id }; for (const c of s.counties) {
-        if (x < c.b[0][0] || x > c.b[1][0] || y < c.b[0][1] || y > c.b[1][1]) continue; if (hitCtx.isPointInPath(cp(c), x, y)) return { kind: "c", id: c.id, st: s.id };
-      }
+      if (x < s.b[0][0] || x > s.b[1][0] || y < s.b[0][1] || y > s.b[1][1] || !hitCtx.isPointInPath(s.p, x, y)) continue; if (mode === "state" && !wantCounty) return { kind: "s", id: s.id, st: s.id };
+      for (const c of s.counties) { if (x < c.b[0][0] || x > c.b[1][0] || y < c.b[0][1] || y > c.b[1][1]) continue; if (hitCtx.isPointInPath(cp(c), x, y)) return { kind: "c", id: c.id, st: s.id }; }
     }
     return null;
   }
@@ -989,36 +934,26 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
       : on ? `In ${esc(L.name)}. Click to remove.` : `Click to add to ${esc(L.name)}`; return `<b>${esc(c.name)}, ${esc(S.get(c.st).abbr)}</b><span>${esc(S.get(c.st).name)}</span>` +
       (idxs ? `<span>Covered by ${namesOf(idxs)}</span>` : "") + `<span class="tip-act">${act}</span>`;
   }
-  let tipW = 0, tipH = 0;   // measured once per content change, not per pointermove (no layout reads in the hot path)
+  let tipW = 0, tipH = 0;   // measured once per content change — no layout reads in the hot path
   function showTip(kind, id, e) {
-    if (!tipFor || tipFor.kind !== kind || tipFor.id !== id) {
-      tipFor = { kind, id }; tipEl.innerHTML = tipHTML(kind, id); tipEl.hidden = false; tipW = tipEl.offsetWidth; tipH = tipEl.offsetHeight;
-    }
-    tipEl.hidden = false; const w = tipW, h = tipH, r = wrapRect || wrap.getBoundingClientRect(); let x = e.clientX - r.left + 14, y = e.clientY - r.top + 18; if (x + w > vw - 8) x = e.clientX - r.left - w - 14;
-    if (y + h > vh - 8) y = e.clientY - r.top - h - 12; tipEl.style.transform = `translate(${Math.max(6, x)}px, ${Math.max(6, y)}px)`;
+    if (!tipFor || tipFor.kind !== kind || tipFor.id !== id) { tipFor = { kind, id }; tipEl.innerHTML = tipHTML(kind, id); tipEl.hidden = false; tipW = tipEl.offsetWidth; tipH = tipEl.offsetHeight; }
+    tipEl.hidden = false; const w = tipW, h = tipH, r = wrapRect || wrap.getBoundingClientRect(); let x = e.clientX - r.left + 14, y = e.clientY - r.top + 18;
+    if (x + w > vw - 8) x = e.clientX - r.left - w - 14; if (y + h > vh - 8) y = e.clientY - r.top - h - 12; tipEl.style.transform = `translate(${Math.max(6, x)}px, ${Math.max(6, y)}px)`;
   }
-  function refreshTip() {
-    if (tipFor && !tipEl.hidden) {
-      tipEl.innerHTML = tipHTML(tipFor.kind, tipFor.id); tipW = tipEl.offsetWidth; tipH = tipEl.offsetHeight;
-    }
-  }
+  function refreshTip() { if (tipFor && !tipEl.hidden) { tipEl.innerHTML = tipHTML(tipFor.kind, tipFor.id); tipW = tipEl.offsetWidth; tipH = tipEl.offsetHeight; } }
   function hideTip() { tipFor = null; if (!tipEl.hidden) tipEl.hidden = true; }
-
-  /* bottom status line: what the cursor is over — "NAME · ST" */
-  const sbCounty = $("#sbCounty"); function setSb(hit) {
+  /* status line: cursor county "NAME · ST" + the "LAYER 3 · 41 COUNTIES" readout (amber tick on switch) */
+  const sbCounty = $("#sbCounty"), sbLayer = $("#sbLayer"); let sbLayerText = "";
+  function setSb(hit) {
     if (!sbCounty) return; let t; if (!hit) t = "\u2014"; else if (hit.kind === "s") t = S.get(hit.id).name; else { const c = C.get(hit.id); t = c.name + " \u00b7 " + S.get(c.st).abbr; }
     if (sbCounty.textContent !== t) sbCounty.textContent = t;   // no DOM writes while hovering the same shape
   }
-
-  /* status-line layer readout: "LAYER 3 · 41 COUNTIES", amber-ticked on a switch */
-  const sbLayer = $("#sbLayer"); let sbLayerText = ""; function updateLayerReadout() {
+  function updateLayerReadout() {
     if (!sbLayer) return; const L = curLayer(); let n = L.c.size; for (const id of L.s) { const s = S.get(id); if (s) n += s.counties.length; }
     const t = "LAYER " + (layers.indexOf(L) + 1) + " \u00b7 " + n.toLocaleString("en-US") + (n === 1 ? " COUNTY" : " COUNTIES");
     if (t !== sbLayerText) { sbLayerText = t; sbLayer.textContent = t; }   // same-value writes guarded
   }
-  function tickLayerReadout() {
-    if (!sbLayer || reduceMotion) return; sbLayer.classList.remove("tick"); void sbLayer.offsetWidth; sbLayer.classList.add("tick");
-  }
+  function tickLayerReadout() { if (!sbLayer || reduceMotion) return; sbLayer.classList.remove("tick"); void sbLayer.offsetWidth; sbLayer.classList.add("tick"); }
 
   canvas.addEventListener("pointerdown", (e) => { lastPointer = e.pointerType || "mouse"; }); let moveRaf = 0, lastMove = null, cursorPtr = false, cursorScreen = null; canvas.addEventListener("pointermove", (e) => {
     const r = canvasRect || canvas.getBoundingClientRect(); cursorScreen = [e.clientX - r.left, e.clientY - r.top]; if (e.pointerType === "touch" || panning || box) return; lastMove = e; if (moveRaf) return;
@@ -1047,52 +982,36 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   /* box select: Shift-drag adds, Alt-drag removes */
   const boxEl = $("#box"); let box = null, suppressClick = false; const clamp = (v, a, b) => Math.max(a, Math.min(b, v)); canvas.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || !(e.shiftKey || e.altKey) || e.pointerType === "touch") return; e.preventDefault(); const r = wrap.getBoundingClientRect();
-    box = { r, x0: e.clientX - r.left, y0: e.clientY - r.top, remove: e.altKey, moved: false, below: false }; box.x1 = box.x0; box.y1 = box.y0; delete boxEl.dataset.n; window.addEventListener("pointermove", boxMove);
-    window.addEventListener("pointerup", boxEnd); window.addEventListener("pointercancel", boxEnd);
-  }); function boxMove(e) {
-    if (!box) return; box.x1 = clamp(e.clientX - box.r.left, 0, vw); box.y1 = clamp(e.clientY - box.r.top, 0, vh); if (!box.moved && Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 4) {
-      box.moved = true; boxEl.classList.toggle("rm", box.remove); boxEl.hidden = false; hideTip(); clearHover();
-    }
+    box = { r, x0: e.clientX - r.left, y0: e.clientY - r.top, x1: e.clientX - r.left, y1: e.clientY - r.top, remove: e.altKey, moved: false, below: false }; delete boxEl.dataset.n;
+    window.addEventListener("pointermove", boxMove); window.addEventListener("pointerup", boxEnd); window.addEventListener("pointercancel", boxEnd);
+  });
+  function boxMove(e) {
+    if (!box) return; box.x1 = clamp(e.clientX - box.r.left, 0, vw); box.y1 = clamp(e.clientY - box.r.top, 0, vh);
+    if (!box.moved && Math.hypot(box.x1 - box.x0, box.y1 - box.y0) > 4) { box.moved = true; boxEl.classList.toggle("rm", box.remove); boxEl.hidden = false; hideTip(); clearHover(); }
     if (box.moved) {
-      const x = Math.min(box.x0, box.x1), y = Math.min(box.y0, box.y1); const w = Math.abs(box.x1 - box.x0), h = Math.abs(box.y1 - box.y0); boxEl.style.transform = `translate(${x}px, ${y}px)`; boxEl.style.width = w + "px";
-      boxEl.style.height = h + "px";
+      const x = Math.min(box.x0, box.x1), y = Math.min(box.y0, box.y1), w = Math.abs(box.x1 - box.x0), h = Math.abs(box.y1 - box.y0); boxEl.style.transform = `translate(${x}px, ${y}px)`; boxEl.style.width = w + "px"; boxEl.style.height = h + "px";
       // live tally — same rule the drop uses: shape centers inside the band
-      const [ax0, ay0] = cur.invert([x, y]), [ax1, ay1] = cur.invert([x + w, y + h]); let n = 0; if (mode === "state") for (const s of S.values()) { if (s.lp[0] >= ax0 && s.lp[0] <= ax1 && s.lp[1] >= ay0 && s.lp[1] <= ay1) n++; }
+      const [ax0, ay0] = cur.invert([x, y]), [ax1, ay1] = cur.invert([x + w, y + h]); let n = 0;
+      if (mode === "state") for (const s of S.values()) { if (s.lp[0] >= ax0 && s.lp[0] <= ax1 && s.lp[1] >= ay0 && s.lp[1] <= ay1) n++; }
       else for (const c of C.values()) { if (c.lp[0] >= ax0 && c.lp[0] <= ax1 && c.lp[1] >= ay0 && c.lp[1] <= ay1) n++; }
-      const label = (box.remove ? "\u2212" : "") + n + " " + (mode === "state" ? (n === 1 ? "state" : "states") : (n === 1 ? "county" : "counties")); if (boxEl.dataset.n !== label) boxEl.dataset.n = label; const below = y < 26;
-      if (below !== box.below) { box.below = below; boxEl.classList.toggle("below", below); }
+      const label = (box.remove ? "\u2212" : "") + n + " " + (mode === "state" ? (n === 1 ? "state" : "states") : (n === 1 ? "county" : "counties"));
+      if (boxEl.dataset.n !== label) boxEl.dataset.n = label; const below = y < 26; if (below !== box.below) { box.below = below; boxEl.classList.toggle("below", below); }
     }
   }
   function boxEnd(e) {
     window.removeEventListener("pointermove", boxMove); window.removeEventListener("pointerup", boxEnd); window.removeEventListener("pointercancel", boxEnd); const b = box; box = null; boxEl.hidden = true;
     if (!b || !b.moved || e.type === "pointercancel") return; suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
-
-    const [mx0, my0] = cur.invert([Math.min(b.x0, b.x1), Math.min(b.y0, b.y1)]); const [mx1, my1] = cur.invert([Math.max(b.x0, b.x1), Math.max(b.y0, b.y1)]);
+    const [mx0, my0] = cur.invert([Math.min(b.x0, b.x1), Math.min(b.y0, b.y1)]), [mx1, my1] = cur.invert([Math.max(b.x0, b.x1), Math.max(b.y0, b.y1)]);
     const inside = (p) => p[0] >= mx0 && p[0] <= mx1 && p[1] >= my0 && p[1] <= my1; const isState = mode === "state", set = isState ? sel.states : sel.counties; const before = snapshot(); let n = 0;
-    for (const it of (isState ? S.values() : C.values())) {
-      if (!inside(it.lp)) continue; if (b.remove) { if (set.delete(it.id)) n++; }
-      else if (!set.has(it.id)) { set.add(it.id); n++; }
-    }
-    const noun = isState ? (n === 1 ? "state" : "states") : (n === 1 ? "county" : "counties"); if (n) {
-      commit(); toast(`${b.remove ? "Removed" : "Added"} ${n} ${noun}`, "Undo", () => restore(before));
-    } else {
-      toast(b.remove ? `No selected ${isState ? "states" : "counties"} have their center in that box` : `No new ${isState ? "states" : "counties"} have their center in that box`);
-    }
+    for (const it of (isState ? S.values() : C.values())) { if (!inside(it.lp)) continue; if (b.remove) { if (set.delete(it.id)) n++; } else if (!set.has(it.id)) { set.add(it.id); n++; } }
+    const noun = isState ? (n === 1 ? "state" : "states") : (n === 1 ? "county" : "counties");
+    if (n) { commit(); toast(`${b.remove ? "Removed" : "Added"} ${n} ${noun}`, "Undo", () => restore(before)); } else toast(`No ${isState ? "states" : "counties"} in that box`);
   }
 
   /* ---------- mode ---------- */
-  const hintEl = $("#hint"), hintBtn = $("#hintBtn"); let hintOpen = false; function buildHint() {
-    const what = mode === "state" ? "a state" : "a county"; hintEl.innerHTML = coarse
-      ? (mode === "origin" ? "<b>Tap a county</b> to mark where the vendor lives." : `<b>Tap ${what}</b> to add it to the layer. Pinch to zoom.`)
-      : (mode === "origin" ? "<b>Click a county</b> to mark where the vendor lives. Scroll to zoom, drag to pan."
-        : `<b>Click ${what}</b> to add it. <b>Middle-click</b> marks the origin. Scroll to zoom, drag to pan. <b>Shift-drag</b> adds an area, <b>Alt-drag</b> removes. Also here: <b>G</b> gap finder, <b>X</b> overlap clashes.`);
-  }
-  function toggleHint(force) {
-    hintOpen = force === undefined ? !hintOpen : !!force; hintBtn.setAttribute("aria-pressed", String(hintOpen)); if (hintOpen) { buildHint(); hintEl.hidden = false; } else hintEl.hidden = true;
-  }
-  hintBtn.addEventListener("click", () => toggleHint()); function setMode(m) {
+  const hintBtn = $("#hintBtn"); const REF = "Click: add \u00b7 Middle-click: origin \u00b7 Shift-drag: add an area \u00b7 Alt-drag: remove \u00b7 G gaps \u00b7 X clashes \u00b7 / search \u00b7 E layers \u00b7 1-9 switch \u00b7 S/C/O mode \u00b7 +/-, arrows zoom & pan \u00b7 0 home";
+  hintBtn.addEventListener("click", () => toast(REF, null, null, 8000)); function setMode(m) {
     mode = m; $("#modeState").setAttribute("aria-checked", String(m === "state")); $("#modeCounty").setAttribute("aria-checked", String(m === "county")); $("#modeOrigin").setAttribute("aria-checked", String(m === "origin"));
-    if (hintOpen) buildHint();   // the reference stays collapsed by default
     clearHover(); hideTip(); requestDraw();
   }
   $("#modeState").addEventListener("click", () => setMode("state")); $("#modeCounty").addEventListener("click", () => setMode("county")); $("#modeOrigin").addEventListener("click", () => setMode("origin"));
@@ -1103,35 +1022,30 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   let analysis = null;   // { kind: "gaps" | "clash", scope: "view" | "us", list: [county] }
   function computeAnalysis() {
     if (!analysis) return; const a = analysis; const [vx0, vy0] = cur.invert([0, 0]), [vx1, vy1] = cur.invert([vw, vh]); const inV = (p) => p[0] >= vx0 && p[0] <= vx1 && p[1] >= vy0 && p[1] <= vy1; a.list = [];
-    if (a.kind === "gaps") {
-      for (const c of C.values()) if (!cover.has(c.id) && (a.scope === "us" || inV(c.lp))) a.list.push(c);
-    } else {
-      for (const [id, idxs] of cover) if (idxs.length > 1) a.list.push(C.get(id));
-    }
+    if (a.kind === "gaps") { for (const c of C.values()) if (!cover.has(c.id) && (a.scope === "us" || inV(c.lp))) a.list.push(c); }
+    else { for (const [id, idxs] of cover) if (idxs.length > 1) a.list.push(C.get(id)); }
     a.list.sort(byName); renderAnalysis();
   }
   function renderAnalysis() {
-    const a = analysis; gapBtn.setAttribute("aria-pressed", String(!!a && a.kind === "gaps")); confBtn.setAttribute("aria-pressed", String(!!a && a.kind === "clash")); if (!a) { anEl.hidden = true; requestDraw(); return; }
-    anEl.hidden = false; const n = a.list.length; anCount.textContent = a.kind === "gaps"
-      ? `${n.toLocaleString("en-US")} uncovered — ${a.scope === "us" ? "all US" : "in view"}`
-      : `${n.toLocaleString("en-US")} disputed — claimed by 2+ layers`; anScopeV.setAttribute("aria-pressed", String(a.scope === "view")); anScopeU.setAttribute("aria-pressed", String(a.scope === "us"));
-    anScopeV.hidden = a.kind !== "gaps"; anScopeU.hidden = a.kind !== "gaps"; const shown = a.list.slice(0, 400); anRows.innerHTML = shown.map((c) => {
+    const a = analysis; gapBtn.setAttribute("aria-pressed", String(!!a && a.kind === "gaps")); confBtn.setAttribute("aria-pressed", String(!!a && a.kind === "clash")); edgeGapBtn.setAttribute("aria-pressed", String(!!a && a.kind === "gaps")); edgeClashBtn.setAttribute("aria-pressed", String(!!a && a.kind === "clash"));
+    if (!a) { anEl.hidden = true; requestDraw(); return; }
+    anEl.hidden = false; const n = a.list.length; anCount.textContent = a.kind === "gaps" ? `${n.toLocaleString("en-US")} uncovered \u2014 ${a.scope === "us" ? "all US" : "in view"}` : `${n.toLocaleString("en-US")} disputed \u00b7 2+ layers`;
+    anScopeV.setAttribute("aria-pressed", String(a.scope === "view")); anScopeU.setAttribute("aria-pressed", String(a.scope === "us")); anScopeV.hidden = a.kind !== "gaps"; anScopeU.hidden = a.kind !== "gaps";
+    const shown = a.list.slice(0, 400); anRows.innerHTML = shown.map((c) => {
       const idxs = cover.get(c.id); const why = a.kind === "clash" && idxs ? `<span class="an-why">${namesOf(idxs)}</span>` : `<span class="an-why">${esc(S.get(c.st).abbr)}</span>`;
       return `<li class="row"><span class="sw" style="background:var(--${a.kind === "gaps" ? "accent" : "danger"})" aria-hidden="true"></span>` +
         `<button type="button" class="row-name" data-an="${c.id}" title="Zoom to ${esc(c.name)}, ${esc(S.get(c.st).abbr)}">${esc(c.name)}, ${esc(S.get(c.st).abbr)}</button>${why}<span></span></li>`;
-    }).join("") + (n > shown.length ? `<li class="an-more">… and ${(n - shown.length).toLocaleString("en-US")} more — zoom in or switch the scope</li>` : ""); requestDraw();
+    }).join("") + (n > shown.length ? `<li class="an-more">\u2026 +${(n - shown.length).toLocaleString("en-US")} more</li>` : ""); requestDraw();
   }
   function runAnalysis(kind, scope) {
     if (analysis && analysis.kind === kind && !scope) { analysis = null; renderAnalysis(); return; }
-    const was = analysis; analysis = { kind, scope: scope || (was && was.scope) || "view", list: [] }; computeAnalysis(); const n = analysis.list.length, word = n === 1 ? "county" : "counties"; toast(kind === "gaps"
-      ? `${n.toLocaleString("en-US")} uncovered ${word} ${analysis.scope === "us" ? "nationwide" : "in view"}`
-      : `${n.toLocaleString("en-US")} ${word} claimed by 2+ layers`);
+    const was = analysis; analysis = { kind, scope: scope || (was && was.scope) || "view", list: [] }; computeAnalysis(); const n = analysis.list.length, word = n === 1 ? "county" : "counties"; setDrawer(true);
+    toast(kind === "gaps" ? `${n.toLocaleString("en-US")} uncovered ${word} ${analysis.scope === "us" ? "nationwide" : "in view"}` : `${n.toLocaleString("en-US")} ${word} claimed by 2+ layers`);
   }
   gapBtn.addEventListener("click", () => runAnalysis("gaps")); confBtn.addEventListener("click", () => runAnalysis("clash")); $("#anClose").addEventListener("click", () => { analysis = null; renderAnalysis(); });
   anScopeV.addEventListener("click", () => { if (analysis && analysis.kind === "gaps") { analysis.scope = "view"; computeAnalysis(); } });
-  anScopeU.addEventListener("click", () => { if (analysis && analysis.kind === "gaps") { analysis.scope = "us"; computeAnalysis(); } }); anRows.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-an]"); if (!b) return; const c = C.get(b.dataset.an); if (!c) return; zoomToBounds(c.b); popAt("c", c.id, pal.accent || "#FFB000", MOT.slow * 2); setSb({ kind: "c", id: c.id });
-  });
+  anScopeU.addEventListener("click", () => { if (analysis && analysis.kind === "gaps") { analysis.scope = "us"; computeAnalysis(); } });
+  anRows.addEventListener("click", (e) => { const b = e.target.closest("[data-an]"); if (!b) return; const c = C.get(b.dataset.an); if (!c) return; zoomToBounds(c.b); popAt("c", c.id, pal.accent || "#FFB000", MOT.slow * 2); setSb({ kind: "c", id: c.id }); });
 
   /* ---------- panel ---------- */
   const listEl = $("#list"); const X_ICON = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg>';
@@ -1146,23 +1060,16 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
 
   function renderList() {
     const gs = groups(); const active = document.activeElement; const hadFocus = listEl.contains(active); const focusIdx = hadFocus ? [...listEl.querySelectorAll("button")].indexOf(active) : -1;
-
-    let html = ""; if (isExample && gs.length) {
-      html += '<div class="note"><span>This is an example selection so you can see how the list works.</span><button type="button" data-clear="1">Clear it and start</button></div>';
-    }
-    if (!gs.length) {
-      html += '<div class="empty"><b>Nothing selected yet</b>' + '<p>Click counties on the map to add them to this layer, and zoom in to see them. Switch to <b>States</b> to take a whole state at once.</p>' +
-        '<p><b>Middle-click</b> a county to mark where the vendor lives. You can also type a name in the search box, or use Import.</p></div>';
-    }
+    let html = ""; if (!gs.length) html += '<div class="empty"><b>Nothing selected</b><p>Click counties to build ' + esc(curLayer().name) + '.</p></div>';
     for (const gr of gs) {
       const s = gr.s, total = s.counties.length, n = gr.counties.length; const meta = n ? `${n} of ${total}` : `${total} ${total === 1 ? "county" : "counties"}`;
       html += `<section class="grp${justAdded === "s" + s.id ? " new" : ""}"><div class="grp-head" data-hl="s${s.id}">` +
         `<button type="button" class="grp-name" data-zoom-state="${s.id}" title="Zoom to ${esc(s.name)}">${esc(s.name)} <span class="ab">${s.abbr}</span></button>` +
-        `<span class="grp-meta" title="${n ? n + " of " + total + " counties selected" : total + " counties"}">${meta}</span>` +
-        `<button type="button" class="chip${gr.whole ? " on" : ""}" data-whole="${s.id}" aria-pressed="${gr.whole}" title="${gr.whole ? "Remove the whole-state selection" : "Also select all of " + esc(s.name)}">` +
+        `<span class="grp-meta">${meta}</span>` +
+        `<button type="button" class="chip${gr.whole ? " on" : ""}" data-whole="${s.id}" aria-pressed="${gr.whole}" title="${gr.whole ? "Unselect " + esc(s.name) : "Select all of " + esc(s.name)}">` +
         (gr.whole ? '<span class="sw sw-state" aria-hidden="true"></span>Whole state' : "+ Whole state") + `</button>` +
-        `<button type="button" class="x" data-rm-group="${s.id}" aria-label="Remove ${esc(s.name)} and its counties from the selection" title="Remove ${esc(s.name)} and its counties">${X_ICON}</button>` +
-        `</div>`; if (n) {
+        `<button type="button" class="x" data-rm-group="${s.id}" aria-label="Remove ${esc(s.name)} and its counties" title="Remove ${esc(s.name)} and its counties">${X_ICON}</button></div>`;
+      if (n) {
         html += '<ul class="rows">'; for (const c of gr.counties) {
           const isO = sel.origins.has(c.id);
           html += `<li class="row${justAdded === "c" + c.id ? " new" : ""}${isO ? " origin" : ""}" data-hl="c${c.id}">${isO ? `<span class="sw-pin" title="Origin">${STAR}</span>` : '<span class="sw sw-county" aria-hidden="true"></span>'}` +
@@ -1175,71 +1082,46 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
       html += "</section>";
     }
     listEl.innerHTML = html; justAdded = null;
-
-    if (focusIdx >= 0) {
-      const btns = listEl.querySelectorAll("button"); if (btns.length) btns[Math.min(focusIdx, btns.length - 1)].focus({ preventScroll: true });
-    }
+    if (focusIdx >= 0) { const btns = listEl.querySelectorAll("button"); if (btns.length) btns[Math.min(focusIdx, btns.length - 1)].focus({ preventScroll: true }); }
   }
-
-  function setCount(el, v) {
-    if (el.textContent === String(v)) return; el.textContent = v; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
-  }
+  function setCount(el, v) { if (el.textContent === String(v)) return; el.textContent = v; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
   /* entrance-only: the ledger head rolls up 0→N through 6 stepped readings (mono odometer) */
   let rollToken = 0; function rollUp(el, target, fmt, tok) {
-    const t0 = performance.now(); const step = (now) => {
-      if (tok !== rollToken) return;   // a real change superseded the entrance roll
-      const p = Math.min(1, (now - t0) / MOT.roll); el.textContent = fmt(Math.round(target * Math.ceil(p * 6) / 6)); if (p < 1) requestAnimationFrame(step);
-    }; requestAnimationFrame(step);
+    const t0 = performance.now(); const step = (now) => { if (tok !== rollToken) return; const p = Math.min(1, (now - t0) / MOT.roll); el.textContent = fmt(Math.round(target * Math.ceil(p * 6) / 6)); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step);
   }
   function renderTotals() {
     const ns = sel.states.size, nc = sel.counties.size; if (rollBoot) {
       rollBoot = false; const tok = ++rollToken; rollUp($("#nStates"), ns, String, tok); rollUp($("#nCounties"), nc, (v) => v.toLocaleString("en-US"), tok);
-    } else {
-      rollToken++; setCount($("#nStates"), ns); setCount($("#nCounties"), nc.toLocaleString());
-    }
+    } else { rollToken++; setCount($("#nStates"), ns); setCount($("#nCounties"), nc.toLocaleString()); }
     const anything = layers.some((l) => l.s.size || l.c.size); $("#copyList").disabled = !anything; $("#copyCsv").disabled = !anything; $("#clearAll").disabled = !sel.states.size && !sel.counties.size;
   }
-
-  function paint() {
-    rebuildCover(); renderChips(); requestDraw(); renderList(); renderTotals(); refreshTip();
-    if (analysis) computeAnalysis();   // stay truthful after every selection change
-    save();
-  }
-
+  function paint() { rebuildCover(); renderChips(); requestDraw(); renderList(); renderTotals(); refreshTip(); if (analysis) computeAnalysis(); save(); }
   function removeGroup(st) {
     const before = snapshot(); sel.states.delete(st); for (const id of [...sel.counties]) if (id.slice(0, 2) === st) sel.counties.delete(id); commit(); toast(`Removed ${S.get(st).name}`, "Undo", () => restore(before));
   }
   function clearAll() {
-    const n = sel.states.size + sel.counties.size; if (!n) return; const before = snapshot(); sel.states.clear(); sel.counties.clear(); sel.origins.clear(); commit();
-    toast(`Cleared ${curLayer().name}`, "Undo", () => restore(before));
+    const n = sel.states.size + sel.counties.size; if (!n) return; const before = snapshot(); sel.states.clear(); sel.counties.clear(); sel.origins.clear(); commit(); toast(`Cleared ${curLayer().name}`, "Undo", () => restore(before));
   }
-
   listEl.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return; const d = b.dataset; if (d.zoomState) zoomToBounds(S.get(d.zoomState).b, 12); else if (d.zoomCounty) zoomToBounds(C.get(d.zoomCounty).b);
-    else if (d.whole) toggle("s", d.whole); else if (d.rmCounty) { sel.counties.delete(d.rmCounty); commit(); }
-    else if (d.rmGroup) removeGroup(d.rmGroup); else if (d.clear) clearAll();
-  }); listEl.addEventListener("pointerover", (e) => {
-    const h = e.target.closest("[data-hl]"); if (!h) return; const k = h.dataset.hl; showHover(k[0], k.slice(1));
-  }); listEl.addEventListener("pointerleave", clearHover); $("#clearAll").addEventListener("click", clearAll);
+    else if (d.whole) toggle("s", d.whole); else if (d.rmCounty) { sel.counties.delete(d.rmCounty); commit(); } else if (d.rmGroup) removeGroup(d.rmGroup);
+  }); listEl.addEventListener("pointerover", (e) => { const h = e.target.closest("[data-hl]"); if (!h) return; const k = h.dataset.hl; showHover(k[0], k.slice(1)); }); listEl.addEventListener("pointerleave", clearHover); $("#clearAll").addEventListener("click", clearAll);
 
-  /* copy — the list and CSV keep full legal names (canonical); the UI shows bare names */
+  /* copy — the paste list uses bare names ("Blaine, MT"); the CSV keeps the legal name + a separate fips column */
   const shortPlace = (id) => { const c = C.get(id); return `${c.name}, ${S.get(c.st).abbr}`; };
-  /* the human paste list uses bare names ("Blaine, MT"); the CSV keeps the legal name + a separate fips column */
   function textList() {
     const out = [], multi = layers.length > 1; for (const L of layers) {
-      if (!L.s.size && !L.c.size) continue; if (multi) out.push(`# ${L.name}`); for (const id of L.o) out.push(`Origin: ${shortPlace(id)}`); for (const gr of groups(L)) {
-        if (gr.whole) out.push(`${gr.s.name} (whole state)`); for (const c of gr.counties) out.push(shortPlace(c.id));
-      }
+      if (!L.s.size && !L.c.size) continue; if (multi) out.push(`# ${L.name}`); for (const id of L.o) out.push(`Origin: ${shortPlace(id)}`);
+      for (const gr of groups(L)) { if (gr.whole) out.push(`${gr.s.name} (whole state)`); for (const c of gr.counties) out.push(shortPlace(c.id)); }
       if (multi) out.push("");
     }
     return out.join("\n").trim();
   }
   function textCSV() {
-    const cell = (v) => (/[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v)); const rows = [["type", "name", "state", "state_abbr", "fips", "layer"]]; for (const L of layers) {
+    const cell = (v) => (/[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v)); const rows = [["type", "name", "state", "state_abbr", "fips", "layer"]];
+    for (const L of layers) {
       for (const id of L.o) { const c = C.get(id), s = S.get(c.st); rows.push(["origin", c.full, s.name, s.abbr, c.id, L.name]); }
-      for (const gr of groups(L)) {
-        if (gr.whole) rows.push(["state", gr.s.name, gr.s.name, gr.s.abbr, gr.s.id, L.name]); for (const c of gr.counties) rows.push(["county", c.full, gr.s.name, gr.s.abbr, c.id, L.name]);
-      }
+      for (const gr of groups(L)) { if (gr.whole) rows.push(["state", gr.s.name, gr.s.name, gr.s.abbr, gr.s.id, L.name]); for (const c of gr.counties) rows.push(["county", c.full, gr.s.name, gr.s.abbr, c.id, L.name]); }
     }
     return rows.map((r) => r.map(cell).join(",")).join("\n");
   }
@@ -1268,22 +1150,19 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim(); const index = []; for (const s of S.values()) {
     index.push({ kind: "s", id: s.id, label: s.name, sub: `State · ${s.counties.length} counties`, name: norm(s.name), words: norm(s.name + " " + s.abbr + " " + s.id).split(" ") });
   }
-  for (const c of C.values()) {
-    const s = S.get(c.st); index.push({ kind: "c", id: c.id, label: `${c.name}, ${s.abbr}`, sub: s.name, name: norm(c.name), words: norm(`${c.full} ${s.name} ${s.abbr} ${c.id}`).split(" ") });
-  }
+  for (const c of C.values()) { const s = S.get(c.st); index.push({ kind: "c", id: c.id, label: `${c.name}, ${s.abbr}`, sub: s.name, name: norm(c.name), words: norm(`${c.full} ${s.name} ${s.abbr} ${c.id}`).split(" ") }); }
   function search(q) {
     const nq = norm(q); if (!nq) return []; const toks = nq.split(" "); const res = []; for (const it of index) {
       if (!toks.every((t) => it.words.some((w) => w.startsWith(t)))) continue; let score = 0; if (it.name === nq) score += 60; if (it.name.startsWith(nq)) score += 30; if (it.kind === "s") score += 15; res.push([score, it]);
     }
     res.sort((a, b) => b[0] - a[0] || a[1].label.localeCompare(b[1].label)); return res.slice(0, 8).map((r) => r[1]);
   }
-
   const qEl = $("#q"), resEl = $("#results"); let results = [], activeIdx = 0; function isOn(it) { return it.kind === "s" ? sel.states.has(it.id) : sel.counties.has(it.id); }
   function renderResults() {
     const q = qEl.value.trim(); if (!q) { closeResults(); return; }
-    results = search(q); activeIdx = Math.min(activeIdx, Math.max(0, results.length - 1)); if (!results.length) {
-      resEl.innerHTML = `<li class="r-empty" role="option" aria-disabled="true">No state or county matches “${esc(q)}”</li>`;
-    } else {
+    results = search(q); activeIdx = Math.min(activeIdx, Math.max(0, results.length - 1));
+    if (!results.length) resEl.innerHTML = `<li class="r-empty" role="option" aria-disabled="true">No state or county matches “${esc(q)}”</li>`;
+    else {
       resEl.innerHTML = results.map((it, i) =>
         `<li role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === activeIdx}">` +
         `<span class="sw ${it.kind === "s" ? "sw-state" : "sw-county"}" aria-hidden="true"></span>` +
@@ -1292,9 +1171,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     }
     resEl.hidden = false; qEl.setAttribute("aria-expanded", "true");
   }
-  function closeResults() {
-    resEl.hidden = true; qEl.setAttribute("aria-expanded", "false"); qEl.removeAttribute("aria-activedescendant");
-  }
+  function closeResults() { resEl.hidden = true; qEl.setAttribute("aria-expanded", "false"); qEl.removeAttribute("aria-activedescendant"); }
   function pick(it) {
     const set = it.kind === "s" ? sel.states : sel.counties; const was = set.has(it.id); if (!was) { set.add(it.id); justAdded = it.kind + it.id; popAt(it.kind, it.id, lcol(curLayer())); commit(); }
     setMode(it.kind === "s" ? "state" : "county"); zoomToBounds(it.kind === "s" ? S.get(it.id).b : C.get(it.id).b, it.kind === "s" ? 12 : 30);
@@ -1305,22 +1182,26 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       if (!results.length) return; e.preventDefault(); activeIdx = (activeIdx + (e.key === "ArrowDown" ? 1 : results.length - 1)) % results.length; renderResults(); const li = resEl.querySelector(`[data-i="${activeIdx}"]`);
       if (li) li.scrollIntoView({ block: "nearest" });
-    } else if (e.key === "Enter") {
-      e.preventDefault(); if (results[activeIdx]) pick(results[activeIdx]);
-    } else if (e.key === "Escape") {
-      if (qEl.value) { qEl.value = ""; closeResults(); } else qEl.blur();
-    }
-  }); resEl.addEventListener("pointerdown", (e) => e.preventDefault()); resEl.addEventListener("click", (e) => {
-    const li = e.target.closest("[data-i]"); if (li) pick(results[+li.dataset.i]);
-  });
+    } else if (e.key === "Enter") { e.preventDefault(); if (results[activeIdx]) pick(results[activeIdx]); }
+    else if (e.key === "Escape") { if (qEl.value) { qEl.value = ""; closeResults(); } else qEl.blur(); }
+  }); resEl.addEventListener("pointerdown", (e) => e.preventDefault()); resEl.addEventListener("click", (e) => { const li = e.target.closest("[data-i]"); if (li) pick(results[+li.dataset.i]); });
+
+  /* ---------- drawer (layers + ledger) + edge rail: the console folds into a 44px tool edge ---------- */
+  const edgeDots = $("#edgeDots"), edgeTog = $("#edgeTog"), edgeGapBtn = $("#edgeGaps"), edgeClashBtn = $("#edgeClash"); function setDrawer(open) { ledgerEl.classList.toggle("open", open); edgeTog.setAttribute("aria-expanded", String(open)); }
+  edgeTog.addEventListener("click", () => setDrawer(!ledgerEl.classList.contains("open")));
+  function renderEdgeDots() { edgeDots.innerHTML = layers.map((L) => `<button type="button" data-edot="${L.id}"${L.id === activeId ? ' class="on" aria-pressed="true"' : ""} style="--c:${lcolCss(L)}" title="${esc(L.name)} \u00b7 ${L.c.size + L.s.size}" aria-label="${esc(L.name)}"><span class="e-dot"></span></button>`).join(""); }
+  edgeDots.addEventListener("click", (e) => { const b = e.target.closest("[data-edot]"); if (b) setActive(Number(b.dataset.edot)); });
+  $("#edgeSearch").addEventListener("click", () => { setDrawer(true); qEl.focus(); });
+  edgeGapBtn.addEventListener("click", () => { setDrawer(true); gapBtn.click(); });
+  edgeClashBtn.addEventListener("click", () => { setDrawer(true); confBtn.click(); });
 
   /* ---------- keyboard ---------- */
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return; const t = e.target; if (t && t.closest && t.closest("input, textarea, select, [contenteditable]")) return; switch (e.key) {
       case "s": case "S": setMode("state"); break; case "c": case "C": setMode("county"); break; case "o": case "O": setMode("origin"); break; case "g": case "G": runAnalysis("gaps"); break;
-      case "x": case "X": runAnalysis("clash"); break; case "e": case "E": setEdit(!editOpen); break; case "?": toggleHint(); break; case "+": case "=": zoomBy(1.7); break; case "-": case "_": zoomBy(1 / 1.7); break;
-      case "0": goHome(); break; case "ArrowLeft": panBy(140, 0); break; case "ArrowRight": panBy(-140, 0); break; case "ArrowUp": panBy(0, 140); break; case "ArrowDown": panBy(0, -140); break;
-      case "/": e.preventDefault(); qEl.focus(); break; case "1": case "2": case "3": case "4": case "5": case "6": case "7": case "8": case "9": activateLayerIndex(Number(e.key) - 1, true); break; default: return;
+      case "x": case "X": runAnalysis("clash"); break; case "e": case "E": setDrawer(true); setEdit(!editOpen); break; case "?": toast(REF, null, null, 8000); break; case "+": case "=": zoomBy(1.7); break; case "-": case "_": zoomBy(1 / 1.7); break;
+      case "0": goHome(); break; case "Escape": if (ledgerEl.classList.contains("open")) setDrawer(false); break; case "ArrowLeft": panBy(140, 0); break; case "ArrowRight": panBy(-140, 0); break; case "ArrowUp": panBy(0, 140); break; case "ArrowDown": panBy(0, -140); break;
+      case "/": e.preventDefault(); setDrawer(true); qEl.focus(); break; case "1": case "2": case "3": case "4": case "5": case "6": case "7": case "8": case "9": activateLayerIndex(Number(e.key) - 1, true); break; default: return;
     }
   });
 
@@ -1368,9 +1249,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   }
 
   /* gate: loading, create, unlock and error screens */
-  function showGate(html) {
-    gateCard.innerHTML = html; gateEl.hidden = false; const f = gateCard.querySelector("input:not([type=checkbox])"); if (f) f.focus();
-  }
+  function showGate(html) { gateCard.innerHTML = html; gateEl.hidden = false; const f = gateCard.querySelector("input:not([type=checkbox])"); if (f) f.focus(); }
   function hideGate() { gateEl.hidden = true; gateCard.innerHTML = ""; }
   const gHead = (r, kicker) => `<p class="g-kicker">${kicker}</p><h2>${r.locked ? "/l/" : "/"}${esc(r.slug)}</h2>`;
   function gateLoading(r) { showGate(gHead(r, r.locked ? "Locked board" : "Board") + '<p class="g-note">Opening…</p>'); }
@@ -1380,7 +1259,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   }
   function gateCreate(r) {
     const n = localBackup ? localBackup.layers.reduce((t, l) => t + l.s.size + l.c.size, 0) : 0; showGate(gHead(r, r.locked ? "New locked board" : "New board") +
-      `<p class="g-note">${r.locked ? "This board doesn't exist yet. Set a password to create it. Everyone who opens it will need that password, and it can't be reset." : "This board doesn't exist yet. Create it, then share the link. Anyone with the link can add and edit."}</p>` +
+      `<p class="g-note">${r.locked ? "Doesn't exist yet. Set a password to create it \u2014 it can't be reset." : "Doesn't exist yet \u2014 create it and share the link."}</p>` +
       `<form id="gForm" class="g-form" data-kind="create">` +
       (r.locked ? '<label for="gPw">Password (4 or more characters)</label><input id="gPw" type="password" minlength="4" maxlength="64" required autocomplete="new-password">' : "") +
       (n ? `<label class="g-check"><input id="gMine" type="checkbox" checked> Start with my current selection (${n} ${n === 1 ? "item" : "items"})</label>` : "") +
@@ -1388,34 +1267,28 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     gateCard.dataset.r = JSON.stringify(r);
   }
   function gateUnlock(r, msg) {
-    showGate(gHead(r, "Locked board") + '<p class="g-note">Enter the password to open this board.</p>' +
+    showGate(gHead(r, "Locked board") + '<p class="g-note">Enter the password.</p>' +
       '<form id="gForm" class="g-form" data-kind="unlock"><label for="gPw">Password</label><input id="gPw" type="password" maxlength="64" required autocomplete="current-password">' +
       `<p class="g-err" id="gErr" role="alert">${esc(msg || "")}</p><div class="g-actions"><button class="btn solid" type="submit">Open</button><button class="btn" type="button" data-act="back">Back to the map</button></div></form>`);
     gateCard.dataset.r = JSON.stringify(r);
   }
   gateCard.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-act]"); if (!b) return; const r = gateCard.dataset.r ? JSON.parse(gateCard.dataset.r) : null; if (b.dataset.act === "back") navigate("");
-    else if (b.dataset.act === "retry" && r) enterBoard(r);
-  }); gateCard.addEventListener("submit", async (e) => {
+    const b = e.target.closest("[data-act]"); if (!b) return; const r = gateCard.dataset.r ? JSON.parse(gateCard.dataset.r) : null; if (b.dataset.act === "back") navigate(""); else if (b.dataset.act === "retry" && r) enterBoard(r);
+  });
+  gateCard.addEventListener("submit", async (e) => {
     e.preventDefault(); const form = e.target, r = JSON.parse(gateCard.dataset.r), err = $("#gErr"), btn = form.querySelector("button[type=submit]"); const pw = form.querySelector("#gPw") ? form.querySelector("#gPw").value : "";
     btn.disabled = true; err.textContent = ""; try {
       if (form.dataset.kind === "create") {
-        const mine = form.querySelector("#gMine") && form.querySelector("#gMine").checked && localBackup; const j = await api("/board/create", {
-          slug: r.slug, locked: r.locked, password: r.locked ? pw : undefined, name: me.name, color: me.color,
-          layers: mine ? localBackup.layers.map((l) => ({ name: l.name, color: l.color, s: [...l.s], c: [...l.c], o: [...l.o] })) : undefined,
-        }); remember(r); startSession(r, j.token || null, true);
-      } else {
-        const j = await api("/board/unlock", { slug: r.slug, password: pw }); startSession(r, j.token || null);
-      }
-    } catch (ex) {
-      btn.disabled = false; err.textContent = ex.status ? ex.message : "Can't reach the server. Check your connection.";
-    }
+        const mine = form.querySelector("#gMine") && form.querySelector("#gMine").checked && localBackup; const j = await api("/board/create", { slug: r.slug, locked: r.locked, password: r.locked ? pw : undefined, name: me.name, color: me.color, layers: mine ? localBackup.layers.map((l) => ({ name: l.name, color: l.color, s: [...l.s], c: [...l.c], o: [...l.o] })) : undefined });
+        remember(r); startSession(r, j.token || null, true);
+      } else { const j = await api("/board/unlock", { slug: r.slug, password: pw }); startSession(r, j.token || null); }
+    } catch (ex) { btn.disabled = false; err.textContent = ex.status ? ex.message : "Can't reach the server."; }
   });
 
   async function enterBoard(r) {
     const my = ++routeSeq; if (board) stopSession(); if (!localBackup) localBackup = snapshot(); renderBoardBox(); gateLoading(r); let info; try { info = await api("/board/info", { slug: r.slug }); }
-    catch (e) { if (my === routeSeq) gateError(r, e.status ? e.message : "Can't reach the server. Check your connection."); return; }
-    if (my !== routeSeq) return; if (r.slug.length < 3) { gateError(r, "Board names need 3 to 32 letters, numbers or dashes."); return; }
+    catch (e) { if (my === routeSeq) gateError(r, e.status ? e.message : "Can't reach the server."); return; }
+    if (my !== routeSeq) return; if (r.slug.length < 3) { gateError(r, "Use 3-32 letters, numbers or dashes."); return; }
     if (!info.exists) { gateCreate(r); return; }
     if (info.locked !== r.locked) { r = { slug: r.slug, locked: info.locked }; history.replaceState(null, "", BASE + pathFor(r)); }
     if (info.locked) {
@@ -1426,7 +1299,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
 
   function startSession(r, token, created) {
     if (board) stopSession(); if (token) { try { sessionStorage.setItem(tokKey(r.slug), token); } catch (e) { /* ignore */ } }
-    remember(r); layers = [mkLayer(0, "Layer 1", LAYER_COLORS[0])]; activeId = 0; isExample = false;
+    remember(r); layers = [mkLayer(0, "Layer 1", LAYER_COLORS[0])]; activeId = 0;
     board = { slug: r.slug, locked: r.locked, token, v: -1, act: 0, peers: new Map(), activity: [], by: new Map(), shadow: new Map(), inflight: 0, timer: 0, flushTimer: 0, metaPending: false, syncing: false, stopped: false, online: true, now: 0, nowAt: 0, liveHtml: "" };
     document.title = `${r.locked ? "/l/" : "/"}${r.slug} · Coverage Ops`; hideGate(); renderBoardBox(); renderLayers(); paint(); renderLive(); toast(`${created ? "Created" : "Joined"} ${r.locked ? "/l/" : "/"}${r.slug}`);
     syncOnce();
@@ -1445,53 +1318,35 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   }
 
   /* sync loop: one request carries my cursor and returns who else is here and what changed */
-  function scheduleSync() {
-    const b = board; if (!b || b.stopped) return; clearTimeout(b.timer); b.timer = setTimeout(syncOnce, document.hidden ? 5000 : b.peers.size ? 600 : 1600);
-  }
+  function scheduleSync() { const b = board; if (!b || b.stopped) return; clearTimeout(b.timer); b.timer = setTimeout(syncOnce, document.hidden ? 5000 : b.peers.size ? 600 : 1600); }
   function syncSoon() { if (board && !board.syncing) { clearTimeout(board.timer); board.timer = setTimeout(syncOnce, 0); } }
   async function syncOnce() {
     const b = board; if (!b || b.syncing || b.stopped) return; b.syncing = true; clearTimeout(b.timer); try {
-      const w = cursorScreen ? cur.invert(cursorScreen) : null; const j = await api("/board/sync", {
-        slug: b.slug, token: b.token, client: me.client, name: me.name, color: me.color, x: w ? w[0] : null, y: w ? w[1] : null, hover: hover ? hover.kind + hover.id : null, v: b.v, act: b.act, full: b.v < 0,
-      }); if (board !== b) return; b.online = true; applySync(b, j);
+      const w = cursorScreen ? cur.invert(cursorScreen) : null; const j = await api("/board/sync", { slug: b.slug, token: b.token, client: me.client, name: me.name, color: me.color, x: w ? w[0] : null, y: w ? w[1] : null, hover: hover ? hover.kind + hover.id : null, v: b.v, act: b.act, full: b.v < 0 });
+      if (board !== b) return; b.online = true; applySync(b, j);
     } catch (e) {
       if (board !== b) return; const r = { slug: b.slug, locked: b.locked };
-      if (e.status === 401) { try { sessionStorage.removeItem(tokKey(b.slug)); } catch (x) { /* ignore */ } stopSession(); gateUnlock(r, "Your session ended. Enter the password again."); return; }
+      if (e.status === 401) { try { sessionStorage.removeItem(tokKey(b.slug)); } catch (x) { /* ignore */ } stopSession(); gateUnlock(r, "Session ended \u2014 enter the password again."); return; }
       if (e.status === 404) { stopSession(); gateCreate(r); return; }
       b.online = false; renderLive();
-    } finally {
-      b.syncing = false; if (board === b) scheduleSync();
-    }
+    } finally { b.syncing = false; if (board === b) scheduleSync(); }
   }
   function applySync(b, j) {
     b.now = j.now; b.nowAt = performance.now(); const next = new Map(); for (const p of j.peers) {
       const old = b.peers.get(p.client); const x = p.x == null ? null : +p.x, y = p.y == null ? null : +p.y;
       next.set(p.client, { name: p.name, color: safeColor(p.color), x, y, hover: p.hover, px: old && old.px != null ? old.px : x, py: old && old.py != null ? old.py : y });
     }
-    b.peers = next; for (const a of j.act) {
-      if (Number(a.seq) > b.act) { b.act = Number(a.seq); b.activity.push({ who: a.who, color: a.color, text: a.text, ts: Number(a.ts) }); }
-    }
+    b.peers = next; for (const a of j.act) { if (Number(a.seq) > b.act) { b.act = Number(a.seq); b.activity.push({ who: a.who, color: a.color, text: a.text, ts: Number(a.ts) }); } }
     if (b.activity.length > 40) b.activity = b.activity.slice(-40); const pending = b.inflight > 0 || b.flushTimer || b.metaPending || diff();
-    if (j.items) { if (!pending) { applyItems(b, j.items, j.layers || [], b.v < 0); b.v = j.v; } }
-    else if (!pending) b.v = j.v; renderLive(); requestDraw();
+    if (j.items) { if (!pending) { applyItems(b, j.items, j.layers || [], b.v < 0); b.v = j.v; } } else if (!pending) b.v = j.v; renderLive(); requestDraw();
   }
   function applyItems(b, items, meta, first) {
-    const next = (meta.length ? meta : [{ id: 0, name: "Layer 1", color: "#111111" }]).map((m) => mkLayer(m.id, String(m.name).slice(0, 32), safeColor(m.color))); const byId = new Map(next.map((l) => [l.id, l]));
-    const by = new Map(); for (const [li, k, id, name, color] of items) {
-      const L = byId.get(li); if (!L) continue; if (k === "s") { if (!S.has(id)) continue; L.s.add(id); }
-      else if (k === "c") { if (!C.has(id)) continue; L.c.add(id); }
-      else if (k === "o") { if (!C.has(id)) continue; L.o.add(id); }
-      by.set(li + ":" + k + id, { name, color: safeColor(color) });
-    }
-    if (!first) {
-      let n = 0; for (const L of next) {
-        const old = layers.find((x) => x.id === L.id); for (const id of L.c) if (!(old && old.c.has(id)) && n++ < 12) popAt("c", id, lcol(L)); for (const id of L.s) if (!(old && old.s.has(id)) && n++ < 12) popAt("s", id, lcol(L));
-      }
-    }
-    layers = next; if (!layers.some((l) => l.id === activeId)) activeId = layers[0].id; b.by = by; b.shadow = new Map(next.map((l) => [l.id, { s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) }])); isExample = false;
+    const next = (meta.length ? meta : [{ id: 0, name: "Layer 1", color: "#111111" }]).map((m) => mkLayer(m.id, String(m.name).slice(0, 32), safeColor(m.color))); const byId = new Map(next.map((l) => [l.id, l])), by = new Map();
+    for (const [li, k, id, name, color] of items) { const L = byId.get(li); if (!L) continue; if (k === "s") { if (!S.has(id)) continue; L.s.add(id); } else if (k === "c") { if (!C.has(id)) continue; L.c.add(id); } else if (k === "o") { if (!C.has(id)) continue; L.o.add(id); } by.set(li + ":" + k + id, { name, color: safeColor(color) }); }
+    if (!first) { let n = 0; for (const L of next) { const old = layers.find((x) => x.id === L.id); for (const id of L.c) if (!(old && old.c.has(id)) && n++ < 12) popAt("c", id, lcol(L)); for (const id of L.s) if (!(old && old.s.has(id)) && n++ < 12) popAt("s", id, lcol(L)); } }
+    layers = next; if (!layers.some((l) => l.id === activeId)) activeId = layers[0].id; b.by = by; b.shadow = new Map(next.map((l) => [l.id, { s: new Set(l.s), c: new Set(l.c), o: new Set(l.o) }]));
     if (!document.activeElement || document.activeElement.id !== "layName") renderEdit(); paint();
   }
-
   /* outgoing changes: set operations, so edits from different people merge */
   const KINDS3 = ["s", "c", "o"]; function diff() {
     const b = board; if (!b) return null; const out = []; for (const L of layers) {
@@ -1503,12 +1358,9 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     }
     return out.length ? out : null;
   }
-  function syncOut() {
-    if (!board) return; clearTimeout(board.flushTimer); board.flushTimer = setTimeout(flush, 80);
-  }
-  const phrase = (s, c) => {
-    const n = s.length + c.length; if (n === 1) return s.length ? S.get(s[0]).name : shortPlace(c[0]); return s.length && !c.length ? `${n} states` : c.length && !s.length ? `${n} counties` : `${n} items`;
-  }; function describeChange(g) {
+  function syncOut() { if (!board) return; clearTimeout(board.flushTimer); board.flushTimer = setTimeout(flush, 80); }
+  const phrase = (s, c) => { const n = s.length + c.length; if (n === 1) return s.length ? S.get(s[0]).name : shortPlace(c[0]); return s.length && !c.length ? `${n} states` : c.length && !s.length ? `${n} counties` : `${n} items`; };
+  function describeChange(g) {
     const L = layers.find((x) => x.id === g.id); const parts = []; const cAdd = g.adds.c.filter((id) => !g.adds.o.includes(id));
     if (g.adds.o.length) parts.push("set the origin to " + shortPlace(g.adds.o[0]) + (g.adds.o.length > 1 ? ` and ${g.adds.o.length - 1} more` : ""));
     if (g.adds.s.length + cAdd.length) parts.push("added " + phrase(g.adds.s, cAdd)); if (g.removes.o.length && !g.removes.o.every((id) => g.removes.c.includes(id))) parts.push("cleared the origin");
@@ -1521,23 +1373,17 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
         for (const id of g.removes[k]) { sh[k].delete(id); b.by.delete(g.id + ":" + k + id); }
       }
     }
-    const text = d.map(describeChange).join("; "); b.inflight++; try {
-      await api("/board/ops", { slug: b.slug, token: b.token, name: me.name, color: me.color, layers: d, text });
-    } catch (e) {
-      if (board === b) {
-        toast(e.status === 429 ? "Slow down a little. That change was not saved." : "Couldn't save that change. Reloading the board."); b.v = -1;
-      }
-    } finally {
-      b.inflight--; if (board === b) { renderLive(); syncSoon(); }
-    }
+    const text = d.map(describeChange).join("; "); b.inflight++; try { await api("/board/ops", { slug: b.slug, token: b.token, name: me.name, color: me.color, layers: d, text }); }
+    catch (e) { if (board === b) { toast(e.status === 429 ? "Not saved \u2014 slow down a little." : "Couldn't save \u2014 reloading."); b.v = -1; } }
+    finally { b.inflight--; if (board === b) { renderLive(); syncSoon(); } }
   }
 
   /* panel: board box and live strip */
   function renderBoardBox() {
     if (!board) {
       const rec = recentList().slice(0, 3).map((x) => `<a href="${BASE}${pathFor(x)}" data-go="${pathFor(x)}">${x.locked ? "🔒 " : ""}/${esc(x.slug)}</a>`).join("");
-      boxEl2.innerHTML = '<div class="bb"><div class="bb-title">Shared board</div>' + '<form id="bbForm" class="bb-row"><span class="bb-slash" aria-hidden="true">/</span><label for="bbName" class="sr-only">Board name</label>' +
-        '<input id="bbName" type="text" maxlength="40" placeholder="board-name" title="Open or start a page everyone edits together, live" autocomplete="off" spellcheck="false">' +
+      boxEl2.innerHTML = '<div class="bb"><form id="bbForm" class="bb-row"><span class="bb-slash" aria-hidden="true">/</span><label for="bbName" class="sr-only">Board name</label>' +
+        '<input id="bbName" type="text" maxlength="40" placeholder="board-name" title="Open or start a live shared board" autocomplete="off" spellcheck="false">' +
         '<label class="bb-lock" for="bbLock" title="Require a password"><input id="bbLock" type="checkbox"> Lock</label><button class="btn solid" type="submit">Go</button></form>' +
         (rec ? `<div class="recent" aria-label="Recent boards">${rec}</div>` : "") + "</div>";
     } else {
@@ -1548,40 +1394,34 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     }
   }
   boxEl2.addEventListener("submit", (e) => {
-    if (e.target.id !== "bbForm") return; e.preventDefault(); const slug = slugify($("#bbName").value); if (slug.length < 3) { toast("Board names need 3 to 32 letters, numbers or dashes."); return; }
+    if (e.target.id !== "bbForm") return; e.preventDefault(); const slug = slugify($("#bbName").value); if (slug.length < 3) { toast("Use 3-32 letters, numbers or dashes."); return; }
     navigate(pathFor({ slug, locked: $("#bbLock").checked }));
-  }); boxEl2.addEventListener("click", (e) => {
+  });
+  boxEl2.addEventListener("click", (e) => {
     const a = e.target.closest("[data-go]"); if (a) { e.preventDefault(); navigate(a.dataset.go); return; }
     const id = e.target.closest("button") && e.target.closest("button").id; if (id === "bbLeave") navigate("");
-    else if (id === "bbCopy") copyText(location.origin + BASE + pathFor(board), "link", "Link copied. Anyone with it can join" + (board.locked ? " (they need the password)." : ".")); else if (id === "bbColor") {
-      me.color = PALETTE[(PALETTE.indexOf(me.color) + 1) % PALETTE.length]; saveMe(); renderBoardBox(); renderLive(); syncSoon();
-    }
-  }); boxEl2.addEventListener("input", (e) => {
-    if (e.target.id !== "bbMe") return; me.name = e.target.value.replace(/[<>]/g, "").slice(0, 24) || "Guest"; saveMe(); const av = $("#bbColor"); if (av) av.textContent = initials(me.name);
-  }); boxEl2.addEventListener("change", (e) => { if (e.target.id === "bbMe") { renderLive(); syncSoon(); } });
-
-  const ago = (b, ts) => {
-    const s = Math.max(0, Math.round(b.now + (performance.now() - b.nowAt) / 1000 - ts)); return s < 5 ? "now" : s < 60 ? s + "s" : s < 3600 ? Math.floor(s / 60) + "m" : Math.floor(s / 3600) + "h";
-  }; function renderLive() {
+    else if (id === "bbCopy") copyText(location.origin + BASE + pathFor(board), "link", "Link copied"); else if (id === "bbColor") { me.color = PALETTE[(PALETTE.indexOf(me.color) + 1) % PALETTE.length]; saveMe(); renderBoardBox(); renderLive(); syncSoon(); }
+  });
+  boxEl2.addEventListener("input", (e) => { if (e.target.id !== "bbMe") return; me.name = e.target.value.replace(/[<>]/g, "").slice(0, 24) || "Guest"; saveMe(); const av = $("#bbColor"); if (av) av.textContent = initials(me.name); });
+  boxEl2.addEventListener("change", (e) => { if (e.target.id === "bbMe") { renderLive(); syncSoon(); } });
+  const ago = (b, ts) => { const s = Math.max(0, Math.round(b.now + (performance.now() - b.nowAt) / 1000 - ts)); return s < 5 ? "now" : s < 60 ? s + "s" : s < 3600 ? Math.floor(s / 60) + "m" : Math.floor(s / 3600) + "h"; };
+  function renderLive() {
     const b = board; const conn = $("#connTag"); if (!b) { liveEl.hidden = true; if (conn) conn.hidden = true; return; }
     if (conn) { conn.hidden = false; conn.textContent = b.online ? "LIVE" : "RECONNECTING"; conn.classList.toggle("off", !b.online); }
     liveEl.hidden = false; const peers = [...b.peers.entries()]; const avs = [`<button type="button" class="av self" style="--c:${me.color}" data-self="1" title="${esc(me.name)} (you)">${esc(initials(me.name))}</button>`]
-      .concat(peers.map(([id, p]) => `<button type="button" class="av" style="--c:${p.color}" data-peer="${id}" title="${esc(p.name)} · click to jump to them">${esc(initials(p.name))}</button>`)).join("");
+      .concat(peers.map(([id, p]) => `<button type="button" class="av" style="--c:${p.color}" data-peer="${id}" title="${esc(p.name)} · click to jump">${esc(initials(p.name))}</button>`)).join("");
     const feed = b.activity.slice(-3).reverse().map((a) => `<li><i class="by" style="background:${safeColor(a.color)}"></i><span><b>${esc(a.who)}</b> ${esc(a.text)}</span><time>${ago(b, a.ts)}</time></li>`).join("");
     const html = `<div class="live-head"><span class="pulse${b.online ? "" : " off"}${document.hidden || !liveOnScreen ? " pause" : ""}"></span><span>${b.online ? `Live · ${peers.length + 1} here` : "Reconnecting…"}</span></div>` +
       `<div class="avs">${avs}</div>` + (feed ? `<ul class="feed" aria-label="Recent changes">${feed}</ul>` : ""); if (html !== b.liveHtml) { liveEl.innerHTML = html; b.liveHtml = html; }
   }
   liveEl.addEventListener("click", (e) => {
-    const a = e.target.closest("[data-peer]"); if (!a || !board) return; const p = board.peers.get(a.dataset.peer); if (!p || p.x == null) { toast(`${p ? p.name : "They"} isn't pointing at the map right now`); return; }
+    const a = e.target.closest("[data-peer]"); if (!a || !board) return; const p = board.peers.get(a.dataset.peer); if (!p || p.x == null) { toast(`${p ? p.name : "They"} isn't on the map`); return; }
     const k = Math.max(cur.k, base.k * 4); animate(view).call(zoom.transform, d3.zoomIdentity.translate(vw / 2 - k * p.x, vh / 2 - k * p.y).scale(k));
   }); setInterval(() => { if (board && !document.hidden) renderLive(); }, 5000);
   /* the one infinite animation (LIVE pulse) rests when the tab is hidden or the live box is offscreen */
-  let liveOnScreen = true; function syncPulse() {
-    const p = liveEl.querySelector(".pulse"); if (p) p.classList.toggle("pause", document.hidden || !liveOnScreen);
-  }
-  const pulseIo = typeof IntersectionObserver === "function" ? new IntersectionObserver((es) => {
-    for (const en of es) if (en.target === liveEl) liveOnScreen = en.isIntersecting; syncPulse();
-  }) : null; if (pulseIo) pulseIo.observe(liveEl); document.addEventListener("visibilitychange", () => { if (!document.hidden) syncSoon(); syncPulse(); }); window.addEventListener("popstate", handleRoute);
+  let liveOnScreen = true; function syncPulse() { const p = liveEl.querySelector(".pulse"); if (p) p.classList.toggle("pause", document.hidden || !liveOnScreen); }
+  const pulseIo = typeof IntersectionObserver === "function" ? new IntersectionObserver((es) => { for (const en of es) if (en.target === liveEl) liveOnScreen = en.isIntersecting; syncPulse(); }) : null;
+  if (pulseIo) pulseIo.observe(liveEl); document.addEventListener("visibilitychange", () => { if (!document.hidden) syncSoon(); syncPulse(); }); window.addEventListener("popstate", handleRoute);
 
   /* other people's cursors, pointed-at shapes and off-screen markers */
   function drawPeers() {
@@ -1607,17 +1447,16 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   }
 
   /* ---------- layer bar ---------- */
-  const chipsEl = $("#layChips"), editEl = $("#layEdit"), editBtn = $("#editBtn"); let editOpen = false; const lcolCss = (L) => (L.color === "#111111" ? "var(--hl)" : L.color); function setEdit(open) {
-    editOpen = !!open; editEl.hidden = !editOpen; editBtn.setAttribute("aria-pressed", String(editOpen));
-  }
-  editBtn.addEventListener("click", () => setEdit(!editOpen)); function renderChips() {
-    document.documentElement.style.setProperty("--lc", lcolCss(curLayer())); updateLayerReadout();
-    const boot = chipBoot ? " enter" : "";   // entrance stagger is attached only on the first render of a load
-    chipsEl.innerHTML = layers.map((L, i) => `<button type="button" role="tab" class="lay${L.id === activeId ? " on" : ""}${boot}" data-lay="${L.id}" aria-selected="${L.id === activeId}" style="--c:${lcolCss(L)}${chipBoot ? ";--i:" + i : ""}" title="${esc(L.name)}">` +
+  const chipsEl = $("#layChips"), editEl = $("#layEdit"), editBtn = $("#editBtn"); let editOpen = false; const lcolCss = (L) => (L.color === "#111111" ? "var(--hl)" : L.color);
+  function setEdit(open) { editOpen = !!open; editEl.hidden = !editOpen; editBtn.setAttribute("aria-pressed", String(editOpen)); }
+  editBtn.addEventListener("click", () => setEdit(!editOpen));
+  function renderChips() {   // entrance stagger (--i) is attached only on the first render of a load
+    document.documentElement.style.setProperty("--lc", lcolCss(curLayer())); updateLayerReadout(); renderEdgeDots();
+    const boot = chipBoot ? " enter" : ""; chipsEl.innerHTML = layers.map((L, i) => `<button type="button" role="tab" class="lay${L.id === activeId ? " on" : ""}${boot}" data-lay="${L.id}" aria-selected="${L.id === activeId}" style="--c:${lcolCss(L)}${chipBoot ? ";--i:" + i : ""}" title="${esc(L.name)}">` +
       `<span class="key" aria-hidden="true">${i < 9 ? i + 1 : "\u00b7"}</span><i class="dot" aria-hidden="true"></i>` +
       `<span class="lay-name">${esc(L.name)}</span>${L.o.size ? '<span class="o-star" aria-hidden="true" title="Origin marked">\u2605</span>' : ""}` +
       `<em>${L.c.size + L.s.size}</em></button>`).join("") +
-      (layers.length < 12 ? `<button type="button" class="lay add${boot}" data-addlay="1" title="Add another coverage layer"${chipBoot ? ' style="--i:' + layers.length + '"' : ""}><span class="key" aria-hidden="true">+</span><span class="lay-name">Add layer</span></button>` : "");
+      (layers.length < 12 ? `<button type="button" class="lay add${boot}" data-addlay="1" title="Add another coverage layer"${chipBoot ? ' style="--i:' + layers.length + '"' : ""}><span class="key" aria-hidden="true">+</span><span class="lay-name">Add</span></button>` : "");
   }
   let delArmed = 0; function renderEdit() {
     const L = curLayer();
@@ -1629,83 +1468,64 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   let metaTimer = 0; function pushMeta(L) {
     if (!board) return; const b = board; b.metaPending = true; clearTimeout(metaTimer); metaTimer = setTimeout(async () => {
       try { await api("/board/layer", { slug: b.slug, token: b.token, op: "update", id: L.id, name: L.name, color: L.color, who: me.name, whoColor: me.color }); }
-      catch (e) { toast(e.message || "Couldn't save the layer"); }
-      finally { b.metaPending = false; if (board === b) syncSoon(); }
+      catch (e) { toast(e.message || "Couldn't save the layer"); } finally { b.metaPending = false; if (board === b) syncSoon(); }
     }, 450);
   }
-  /* the layer-switch gesture: keycap depress + chip latch + one canvas sweep + status tick.
-     Reduced motion: chip + status only (pulseLayer and the classes bail out). */
+  /* the layer-switch gesture: keycap depress + chip latch + one canvas sweep + status tick */
   function setActive(id, viaKey) {
     if (!layers.some((l) => l.id === id)) return; const changed = id !== activeId; activeId = id; delArmed = 0; renderEdit(); paint(); if (!changed) return; pulseLayer(curLayer()); tickLayerReadout(); if (reduceMotion) return;
-    const chip = chipsEl.querySelector('[data-lay="' + id + '"]'); if (chip) {
-      chip.classList.add("snap"); if (viaKey) chip.classList.add("depress"); setTimeout(() => chip.classList.remove("snap", "depress"), MOT.base);
-    }
+    const chip = chipsEl.querySelector('[data-lay="' + id + '"]'); if (chip) { chip.classList.add("snap"); if (viaKey) chip.classList.add("depress"); setTimeout(() => chip.classList.remove("snap", "depress"), MOT.base); }
   }
   async function addLayer() {
-    if (layers.length >= 12) { toast("A board can have up to 12 layers."); return; }
-    const used = new Set(layers.map((l) => l.color)); const color = LAYER_COLORS.find((c) => !used.has(c)) || LAYER_COLORS[layers.length % LAYER_COLORS.length]; const name = `Layer ${layers.length + 1}`; let id = 0; if (board) {
+    if (layers.length >= 12) { toast("12 layers max."); return; }
+    const used = new Set(layers.map((l) => l.color)); const color = LAYER_COLORS.find((c) => !used.has(c)) || LAYER_COLORS[layers.length % LAYER_COLORS.length]; const name = `Layer ${layers.length + 1}`; let id = 0;
+    if (board) {
       const b = board; try {
-        const j = await api("/board/layer", { slug: b.slug, token: b.token, op: "add", name, color, who: me.name, whoColor: me.color }); if (board !== b) return; id = j.id;
-        b.shadow.set(id, { s: new Set(), c: new Set(), o: new Set() });
+        const j = await api("/board/layer", { slug: b.slug, token: b.token, op: "add", name, color, who: me.name, whoColor: me.color }); if (board !== b) return; id = j.id; b.shadow.set(id, { s: new Set(), c: new Set(), o: new Set() });
       } catch (e) { toast(e.message || "Couldn't add a layer"); return; }
-    } else {
-      const used2 = new Set(layers.map((l) => l.id)); while (used2.has(id)) id++;
-    }
+    } else { const used2 = new Set(layers.map((l) => l.id)); while (used2.has(id)) id++; }
     layers.push(mkLayer(id, name, color)); activeId = id; delArmed = 0; renderEdit(); paint(); setEdit(true); tickLayerReadout(); const f = $("#layName"); if (f) { f.focus(); f.select(); }
   }
   async function deleteLayer() {
     if (layers.length < 2) return; const L = curLayer(); if (!delArmed) { delArmed = setTimeout(() => { delArmed = 0; renderEdit(); }, 3500); renderEdit(); return; }
-    clearTimeout(delArmed); delArmed = 0; if (board) {
+    clearTimeout(delArmed); delArmed = 0;
+    if (board) {
       const b = board; try { await api("/board/layer", { slug: b.slug, token: b.token, op: "delete", id: L.id, who: me.name, whoColor: me.color }); }
       catch (e) { toast(e.message || "Couldn't delete the layer"); renderEdit(); return; }
       if (board !== b) return; b.shadow.delete(L.id); layers = layers.filter((x) => x.id !== L.id);
-    } else {
-      const before = snapshot(); layers = layers.filter((x) => x.id !== L.id); toast(`Deleted ${L.name}`, "Undo", () => restore(before));
-    }
+    } else { const before = snapshot(); layers = layers.filter((x) => x.id !== L.id); toast(`Deleted ${L.name}`, "Undo", () => restore(before)); }
     activeId = layers[0].id; renderEdit(); paint();
   }
-  chipsEl.addEventListener("click", (e) => {
-    const b = e.target.closest("button"); if (!b) return; if (b.dataset.addlay) addLayer(); else if (b.dataset.lay) setActive(Number(b.dataset.lay));
-  }); editEl.addEventListener("input", (e) => {
-    if (e.target.id !== "layName") return; const L = curLayer(); L.name = e.target.value.replace(/[<>]/g, "").slice(0, 32) || "Layer"; renderChips(); save(); pushMeta(L);
-  }); editEl.addEventListener("click", (e) => {
-    const b = e.target.closest("button"); if (!b) return; if (b.dataset.color) { const L = curLayer(); L.color = b.dataset.color; renderEdit(); paint(); pushMeta(L); }
-    else if (b.dataset.dellay) deleteLayer();
-  }); function activateLayerIndex(i, viaKey) { if (layers[i]) setActive(layers[i].id, viaKey); }
+  chipsEl.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.addlay) addLayer(); else if (b.dataset.lay) setActive(Number(b.dataset.lay)); });
+  editEl.addEventListener("input", (e) => { if (e.target.id !== "layName") return; const L = curLayer(); L.name = e.target.value.replace(/[<>]/g, "").slice(0, 32) || "Layer"; renderChips(); save(); pushMeta(L); });
+  editEl.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.color) { const L = curLayer(); L.color = b.dataset.color; renderEdit(); paint(); pushMeta(L); } else if (b.dataset.dellay) deleteLayer(); });
+  function activateLayerIndex(i, viaKey) { if (layers[i]) setActive(layers[i].id, viaKey); }
 
   /* ---------- import: paste names, FIPS codes or a CSV ---------- */
   let lookup = null; function buildLookup() {
     const stName = new Map(), stAbbr = new Map(), counties = new Map(); for (const s of S.values()) { stName.set(norm(s.name), s.id); stAbbr.set(s.abbr.toLowerCase(), s.id); }
-    const add = (key, id) => { const a = counties.get(key); if (!a) counties.set(key, [id]); else if (!a.includes(id)) a.push(id); }; for (const c of C.values()) {
-      add(c.st + "|" + norm(c.full), c.id); add(c.st + "|" + norm(c.name), c.id); add(c.st + "|" + norm(c.name).replace(/ (county|parish|borough|census area|municipality|city and borough)$/, ""), c.id);
-    }
-    const byLen = [...stName.keys()].sort((a, b) => b.length - a.length); lookup = { stName, stAbbr, counties, byLen };
+    const add = (key, id) => { const a = counties.get(key); if (!a) counties.set(key, [id]); else if (!a.includes(id)) a.push(id); }; for (const c of C.values()) { add(c.st + "|" + norm(c.full), c.id); add(c.st + "|" + norm(c.name), c.id); add(c.st + "|" + norm(c.name).replace(/ (county|parish|borough|census area|municipality|city and borough)$/, ""), c.id); }
+    lookup = { stName, stAbbr, counties, byLen: [...stName.keys()].sort((a, b) => b.length - a.length) };
   }
   function splitCells(line) {
-    const out = []; let cell = "", q = false; for (let i = 0; i < line.length; i++) {
-      const ch = line[i]; if (q) { if (ch === '"') { if (line[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
-      else if (ch === '"') q = true; else if (ch === "," || ch === "\t" || ch === ";" || ch === "|") { out.push(cell); cell = ""; }
-      else cell += ch;
-    }
+    const out = []; let cell = "", q = false; for (let i = 0; i < line.length; i++) { const ch = line[i]; if (q) { if (ch === '"') { if (line[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; } else if (ch === '"') q = true; else if (ch === "," || ch === "\t" || ch === ";" || ch === "|") { out.push(cell); cell = ""; } else cell += ch; }
     out.push(cell); return out.map((x) => x.trim()).filter(Boolean);
   }
-  const stateOf = (t) => { const n = norm(t); return lookup.stName.get(n) || (n.length === 2 ? lookup.stAbbr.get(n) : undefined); }; function findCounty(st, name) {
-    const n = norm(name); let r = lookup.counties.get(st + "|" + n); if (!r) r = lookup.counties.get(st + "|" + n.replace(/ (county|parish|borough|census area|municipality)$/, "")); return r;
-  }
+  const stateOf = (t) => { const n = norm(t); return lookup.stName.get(n) || (n.length === 2 ? lookup.stAbbr.get(n) : undefined); };
+  function findCounty(st, name) { const n = norm(name); let r = lookup.counties.get(st + "|" + n); if (!r) r = lookup.counties.get(st + "|" + n.replace(/ (county|parish|borough|census area|municipality)$/, "")); return r; }
   // one line -> { s } | { c } | { err }
   function resolveLine(t, line) {
     const five = t.find((x) => /^\d{5}$/.test(x)) || t.find((x) => /^\d{4}$/.test(x) && C.has("0" + x));
     if (five) { const id = five.length === 4 ? "0" + five : five; return C.has(id) ? { c: id } : { err: "No county with that FIPS code" }; }
     const two = t.length <= 6 && /^(state|county|origin)$/i.test(t[0]) ? t.find((x) => /^\d{2}$/.test(x)) : (t.length === 1 && /^\d{2}$/.test(t[0]) ? t[0] : null);
-    if (two) return S.has(two) ? { s: two } : { err: "No state with that FIPS code" }; let st = null, name = null; if (t.length >= 2) {
+    if (two) return S.has(two) ? { s: two } : { err: "No state with that FIPS code" }; let st = null, name = null;
+    if (t.length >= 2) {
       const a = stateOf(t[1]), b2 = stateOf(t[0]); if (a) { st = a; name = t[0]; } else if (b2 && t[1]) { st = b2; name = t[1]; }
       if (!st) return { err: "Couldn't find the state" };
     } else {
-      const only = t[0]; const whole = stateOf(only); if (whole && !/county|parish/i.test(only)) return { s: whole }; const m = only.match(/^(.*\S)[\s,]+([A-Za-z]{2})$/);
+      const only = t[0], whole = stateOf(only); if (whole && !/county|parish/i.test(only)) return { s: whole }; const m = only.match(/^(.*\S)[\s,]+([A-Za-z]{2})$/);
       if (m && lookup.stAbbr.has(m[2].toLowerCase())) { st = lookup.stAbbr.get(m[2].toLowerCase()); name = m[1]; }
-      else {
-        const nn = norm(only); for (const sn of lookup.byLen) if (nn.endsWith(" " + sn)) { st = lookup.stName.get(sn); name = nn.slice(0, nn.length - sn.length - 1); break; }
-      }
+      else { const nn = norm(only); for (const sn of lookup.byLen) if (nn.endsWith(" " + sn)) { st = lookup.stName.get(sn); name = nn.slice(0, nn.length - sn.length - 1); break; } }
       if (!st) return { err: "Add a state, like “Cook County, IL”" };
     }
     if (/^whole state$/i.test(name) || norm(name) === norm(S.get(st).name)) return { s: st }; const found = findCounty(st, name); if (!found) return { err: `No county called “${name}” in ${S.get(st).abbr}` };
@@ -1713,8 +1533,7 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
   }
   function parseImport(text) {
     if (!lookup) buildLookup(); const res = { s: new Set(), c: new Set(), o: new Set(), bad: [] }; for (const raw of text.split(/\r?\n/)) {
-      let line = raw.trim();
-      if (!line || line[0] === "#" || line.startsWith("//")) continue;
+      let line = raw.trim(); if (!line || line[0] === "#" || line.startsWith("//")) continue;
       let isOrigin = false; const pre = line.match(/^origin\s*[:\-]\s*(.*)$/i); if (pre) { isOrigin = true; line = pre[1]; }
       const t = splitCells(line.replace(/\((whole state|state)\)/i, "")); if (!t.length) continue; if (/^type$/i.test(t[0]) && t.some((x) => /^fips$/i.test(x))) continue;
       if (/^origin$/i.test(t[0]) && t.length > 1) isOrigin = true; const r = resolveLine(t, line); if (r.err) res.bad.push({ line: line.slice(0, 60), why: r.err });
@@ -1723,21 +1542,24 @@ kbd { font: 700 10px/1 var(--mono); padding: 4px 8px; border-radius: 4px; border
     }
     return res;
   }
-  const importSheet = $("#importSheet"), importText = $("#importText"), importGo = $("#importGo"); let importParsed = null, importTimer = 0; function renderImport() {
-    const text = importText.value; const sum = $("#importSummary"), badEl = $("#importBad");
+  const importSheet = $("#importSheet"), importText = $("#importText"), importGo = $("#importGo"); let importParsed = null, importTimer = 0;
+  function renderImport() {
+    const text = importText.value, sum = $("#importSummary"), badEl = $("#importBad");
     if (!text.trim()) { importParsed = null; sum.textContent = ""; badEl.innerHTML = ""; importGo.disabled = true; importGo.textContent = "Add to layer"; return; }
-    importParsed = parseImport(text); const ns = [...importParsed.s].filter((id) => !sel.states.has(id)).length; const nc = [...importParsed.c].filter((id) => !sel.counties.has(id)).length;
-    const no = [...importParsed.o].filter((id) => !sel.origins.has(id)).length; const total = importParsed.s.size + importParsed.c.size; const dup = total - ns - nc;
+    importParsed = parseImport(text); const ns = [...importParsed.s].filter((id) => !sel.states.has(id)).length, nc = [...importParsed.c].filter((id) => !sel.counties.has(id)).length, no = [...importParsed.o].filter((id) => !sel.origins.has(id)).length;
+    const total = importParsed.s.size + importParsed.c.size, dup = total - ns - nc;
     sum.textContent = `${total} recognized` + (importParsed.o.size ? `, ${importParsed.o.size} as origin` : "") + (dup ? `, ${dup} already in this layer` : "") + (importParsed.bad.length ? `, ${importParsed.bad.length} not recognized` : "") + ".";
     badEl.innerHTML = importParsed.bad.slice(0, 6).map((b) => `<li><code>${esc(b.line)}</code> ${esc(b.why)}</li>`).join("") + (importParsed.bad.length > 6 ? `<li>and ${importParsed.bad.length - 6} more</li>` : "");
     const n = ns + nc + no; importGo.disabled = !n; importGo.textContent = n ? `Add ${ns + nc} to ${curLayer().name}` : "Nothing new to add";
   }
-  importText.addEventListener("input", () => { clearTimeout(importTimer); importTimer = setTimeout(renderImport, 150); }); $("#importFile").addEventListener("change", (e) => {
-    const f = e.target.files && e.target.files[0]; if (!f) return; if (f.size > 2e6) { toast("That file is too large. Keep it under 2 MB."); return; }
+  importText.addEventListener("input", () => { clearTimeout(importTimer); importTimer = setTimeout(renderImport, 150); });
+  $("#importFile").addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0]; if (!f) return; if (f.size > 2e6) { toast("File too large (2 MB max)."); return; }
     const fr = new FileReader(); fr.onload = () => { importText.value = String(fr.result).slice(0, 400000); renderImport(); }; fr.readAsText(f); e.target.value = "";
-  }); $("#importBtn").addEventListener("click", () => {
-    importSheet.hidden = !importSheet.hidden; if (!importSheet.hidden) { renderImport(); importText.focus(); }
-  }); $("#importCancel").addEventListener("click", () => { importSheet.hidden = true; importText.value = ""; renderImport(); }); importGo.addEventListener("click", () => {
+  });
+  $("#importBtn").addEventListener("click", () => { importSheet.hidden = !importSheet.hidden; if (!importSheet.hidden) { renderImport(); importText.focus(); } });
+  $("#importCancel").addEventListener("click", () => { importSheet.hidden = true; importText.value = ""; renderImport(); });
+  importGo.addEventListener("click", () => {
     if (!importParsed) return; const before = snapshot(); let n = 0, minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
     const grow = (b) => { minx = Math.min(minx, b[0][0]); miny = Math.min(miny, b[0][1]); maxx = Math.max(maxx, b[1][0]); maxy = Math.max(maxy, b[1][1]); };
     for (const id of importParsed.s) if (!sel.states.has(id)) { sel.states.add(id); n++; grow(S.get(id).b); }
