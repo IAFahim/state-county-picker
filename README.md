@@ -1,8 +1,16 @@
 # State & County Picker
 
-Pick US states and counties on a zoomable map, group them into colored **layers** (one per coverage area), mark each layer's **origin**, and share a live board with your team. Black and white, no build step.
+Pick US states and counties on a zoomable map, group them into colored **layers** (one per coverage area), mark each layer's **origin**, and share a live board with your team. Flat-black console over real map tiles, no build step.
 
 Live: https://iafahim.github.io/state-county-picker/
+
+## What's new
+
+- **Real map tiles** — OpenStreetMap streets, USGS satellite, or dark, mesh-warped into the map's Albers-USA projection so tiles and county fills sit in register.
+- **Gap finder (`G`)** — amber-hatches every county covered by no layer, with a count and a jump-to list. The uncovered-market view.
+- **Overlap conflicts (`X`)** — lists every county claimed by two or more layers (who disputes what, where).
+- **Leaner console** — the default screen is map + layers + one status line; the keyboard reference hides behind `?`.
+- **Clean names** — `Bexar · TX` everywhere; CSV keeps the legal name with FIPS as its own column. Import still accepts pasted FIPS codes.
 
 ## Using it
 
